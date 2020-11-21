@@ -18,12 +18,7 @@
 int main(int argc, char* argv[]) {
     QApplication ripEncodeApp(argc, argv);
     xApplication ripEncode;
+    ripEncode.resize(1920, 1080);
     ripEncode.show();
     return ripEncodeApp.exec();
-
-#if 0
-    xAudioRipper audioRipper;
-    audioRipper.detect();
-    audioRipper.rip( { {1, "01 realize.wav"}, {2, "02 rejection.wav"}, {3, "03 shot in the dark.wav" } });
-#endif
 }

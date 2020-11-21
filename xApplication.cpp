@@ -20,9 +20,9 @@
 xApplication::xApplication(QWidget* parent, Qt::WindowFlags flags):
         QMainWindow(parent, flags) {
 
-    audioRipperWidget = new xMainAudioRipperWidget(this);
+    audioCDWidget = new xMainAudioCDWidget(this);
     // Set central widget
-    setCentralWidget(audioRipperWidget);
+    setCentralWidget(audioCDWidget);
     // Create Menu
     createMenus();
 }

@@ -14,7 +14,7 @@
 #ifndef __XAPPLICATION_H__
 #define __XAPPLICATION_H__
 
-#include "xMainAudioRipperWidget.h"
+#include "xMainAudioCDWidget.h"
 #include <QSettings>
 #include <QStackedWidget>
 #include <QMainWindow>
@@ -33,7 +33,7 @@ private:
      */
     void createMenus();
 
-    xMainAudioRipperWidget* audioRipperWidget;
+    xMainAudioCDWidget* audioCDWidget;
 };
 
 #endif
