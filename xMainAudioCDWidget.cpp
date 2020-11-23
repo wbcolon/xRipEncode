@@ -13,26 +13,23 @@
  */
 
 #include "xMainAudioCDWidget.h"
-#include <QFileDialog>
-#include <QMessageBox>
 #include <QGridLayout>
 #include <QLabel>
 #include <QGroupBox>
+#include <QComboBox>
 #include <QDebug>
 
 xMainAudioCDWidget::xMainAudioCDWidget(QWidget *parent, Qt::WindowFlags flags):
         QWidget(parent, flags) {
 
     auto mainLayout = new QGridLayout(this);
-    // Audio cd box for artist and album input and some control.
+    // Audio CD -  artist and album input and some control.
     auto audioCDBox = new QGroupBox(tr("Audio CD"), this);
     audioCDDetectButton = new QPushButton(tr("Detect"), audioCDBox);
     audioCDEjectButton = new QPushButton(tr("Eject"), audioCDBox);
     audioCDArtistName = new QLineEdit(audioCDBox);
     audioCDAlbumName = new QLineEdit(audioCDBox);
     auto audioCDLayout = new QGridLayout();
-    audioCDAutoFillButton = new QPushButton(tr("Autofill"), audioCDBox);
-    audioCDCDDBButton = new QPushButton(tr("CDDB"), audioCDBox);
     audioCDLayout->addWidget(new QLabel(tr("Artist"), audioCDBox), 0, 0, 1, 1);
     audioCDLayout->addWidget(audioCDArtistName, 1, 0, 1, 6);
     audioCDLayout->addWidget(new QLabel(tr("Album"), audioCDBox), 2, 0, 1, 1);
@@ -41,26 +38,39 @@ xMainAudioCDWidget::xMainAudioCDWidget(QWidget *parent, Qt::WindowFlags flags):
     audioCDLayout->setRowStretch(4, 0);
     audioCDLayout->addWidget(audioCDDetectButton, 5, 0, 1, 3);
     audioCDLayout->addWidget(audioCDEjectButton, 5, 3, 1, 3);
-    audioCDLayout->setRowMinimumHeight(6, 20);
+    audioCDLayout->setRowMinimumHeight(6, 50);
     audioCDLayout->setRowStretch(6, 0);
-    audioCDLayout->addWidget(audioCDCDDBButton, 7, 0, 1, 3);
-    audioCDLayout->addWidget(audioCDAutoFillButton, 7, 3, 1, 3);
+    // Audio CD - lookup section.
+    auto audioCDLookupResultsLabel = new QLabel(tr("Lookup Results"), audioCDBox);
+    audioCDLookupResults = new QComboBox(audioCDBox);
+    audioCDAutofillButton = new QPushButton(tr("Autofill"), audioCDBox);
+    audioCDLookupButton = new QPushButton(tr("Lookup"), audioCDBox);
+    audioCDTrackOffset = new QSpinBox(audioCDBox);
+    auto audioCDTrackOffsetLabel = new QLabel(tr("Offset"), audioCDBox);
+    audioCDTrackOffsetLabel->setAlignment(Qt::AlignLeft);
+    audioCDLowerCase = new QCheckBox(tr("Lowercase"), audioCDBox);
+    audioCDLowerCase->setChecked(true);
+    audioCDReplace = new QCheckBox(tr("Replace"), audioCDBox);
+    audioCDReplace->setChecked(false);
+    audioCDReplaceTo = new QLineEdit(audioCDBox);
+    audioCDReplaceFrom = new QLineEdit(audioCDBox);
+    audioCDLayout->addWidget(audioCDLookupResultsLabel, 7, 0, 1, 5);
+    audioCDLayout->addWidget(audioCDTrackOffsetLabel, 7, 5, 1, 1);
+    audioCDLayout->addWidget(audioCDLookupResults, 8, 0, 1, 5);
+    audioCDLayout->addWidget(audioCDTrackOffset, 8, 5, 1, 1);
+    audioCDLayout->setRowMinimumHeight(9, 20);
+    audioCDLayout->setRowStretch(9, 0);
+    audioCDLayout->addWidget(audioCDLowerCase, 10, 0, 1, 1);
+    audioCDLayout->addWidget(audioCDReplace, 10, 1, 1, 1);
+    audioCDLayout->addWidget(audioCDReplaceFrom, 10, 2, 1, 2);
+    audioCDLayout->addWidget(audioCDReplaceTo, 10, 4, 1, 2);
+    audioCDLayout->setRowMinimumHeight(11, 50);
+    audioCDLayout->setRowStretch(11, 0);
+    audioCDLayout->addWidget(audioCDLookupButton, 12, 0, 1, 3);
+    audioCDLayout->addWidget(audioCDAutofillButton, 12, 3, 1, 3);
+    audioCDLayout->setRowMinimumHeight(13, 20);
+    audioCDLayout->setRowStretch(13, 0);
     audioCDBox->setLayout(audioCDLayout);
-    // Configuration box for ouput file format and output directory.
-    auto configurationBox = new QGroupBox(tr("Configuration"), this);
-    configurationFileFormat = new QLineEdit(configurationBox);
-    configurationFileFormat->setText("(artist)#(album)#(tracknr) (trackname)");
-    auto configurationFileFormatButton = new QPushButton("...", configurationBox);
-    configurationDirectory = new QLineEdit(configurationBox);
-    auto configurationDiretoryButton = new QPushButton("...", configurationBox);
-    auto configurationLayout = new QGridLayout();
-    configurationLayout->addWidget(new QLabel(tr("File Format"), configurationBox), 0, 0);
-    configurationLayout->addWidget(configurationFileFormat, 1, 0, 1, 5);
-    configurationLayout->addWidget(configurationFileFormatButton, 1, 5);
-    configurationLayout->addWidget(new QLabel(tr("Directory"), configurationBox), 2, 0);
-    configurationLayout->addWidget(configurationDirectory, 3, 0, 1, 5);
-    configurationLayout->addWidget(configurationDiretoryButton, 3, 5);
-    configurationBox->setLayout(configurationLayout);
     // Audio tracks box.
     auto audioTracksBox = new QGroupBox(tr("Audio Tracks"), this);
     audioTracksSelectButton = new QPushButton(tr("Select All"), audioTracksBox);
@@ -86,22 +96,23 @@ xMainAudioCDWidget::xMainAudioCDWidget(QWidget *parent, Qt::WindowFlags flags):
     consoleLayout->addWidget(consoleText, 0, 0, 2, 6);
     consoleBox->setLayout(consoleLayout);
     // Setup main layout.
-    mainLayout->addWidget(configurationBox, 0, 0, 3, 4);
-    mainLayout->addWidget(audioCDBox, 3, 0, 4, 4);
-    mainLayout->addWidget(audioTracksBox, 0, 4, 7, 4);
-    mainLayout->setRowMinimumHeight(7, 20);
-    mainLayout->setRowStretch(7, 0);
-    mainLayout->addWidget(consoleBox, 8, 0, 2, 8);
+    mainLayout->addWidget(audioCDBox, 0, 0, 7, 4);
+    mainLayout->addWidget(consoleBox, 7, 0, 3, 4);
+    mainLayout->addWidget(audioTracksBox, 0, 4, 10, 4);
     // Connect Buttons
-    connect(configurationDiretoryButton, &QPushButton::pressed, this, &xMainAudioCDWidget::directory);
-    connect(configurationFileFormatButton, &QPushButton::pressed, this, &xMainAudioCDWidget::fileformat);
     connect(audioCDDetectButton, &QPushButton::pressed, this, &xMainAudioCDWidget::detect);
     connect(audioCDEjectButton, &QPushButton::pressed, this, &xMainAudioCDWidget::eject);
-    connect(audioCDCDDBButton, &QPushButton::pressed, this, &xMainAudioCDWidget::cddb);
-    connect(audioCDAutoFillButton, &QPushButton::pressed, this, &xMainAudioCDWidget::autofill);
+    connect(audioCDAutofillButton, &QPushButton::pressed, this, &xMainAudioCDWidget::autofill);
+    connect(audioCDLookupButton, &QPushButton::pressed, this, &xMainAudioCDWidget::musicBrainz);
     connect(audioTracksSelectButton, &QPushButton::pressed, audioTracks, &xAudioTracksWidget::selectAll);
     connect(audioTracksRipButton, &QPushButton::pressed, this, &xMainAudioCDWidget::rip);
     connect(audioTracksRipCancelButton, &QPushButton::pressed, this, &xMainAudioCDWidget::ripCancel);
+    connect(audioCDLookupResults, SIGNAL(currentIndexChanged(int)), this, SLOT(musicBrainzUpdate(int)));
+    // Update names if checkbox "Replace" or "Lowercase" is clicked.
+    connect(audioCDLowerCase, &QCheckBox::clicked, [=](bool) { musicBrainzUpdate(audioCDLookupResults->currentIndex()); });
+    connect(audioCDReplace, &QCheckBox::clicked, [=](bool) { musicBrainzUpdate(audioCDLookupResults->currentIndex()); });
+    // Update track offset.
+    connect(audioCDTrackOffset, SIGNAL(valueChanged(int)), audioTracks, SLOT(setTrackOffset(int)));
     // Create audio ripper object and connect object.
     audioCD = new xAudioCD(this);
     connect(audioCD, &xAudioCD::ripProgress, audioTracks, &xAudioTracksWidget::ripProgress);
@@ -110,21 +121,36 @@ xMainAudioCDWidget::xMainAudioCDWidget(QWidget *parent, Qt::WindowFlags flags):
     connect(audioCD, &xAudioCD::ripFinished, this, &xMainAudioCDWidget::ripFinished);
 }
 
-void xMainAudioCDWidget::cddb() {
+void xMainAudioCDWidget::musicBrainz() {
     auto id = audioCD->getID();
     if (!id.isEmpty()) {
         // Initiate audio CD lookup. Request lowercase results.
-        audioCDLookup = new xAudioCDLookup(id, true, this);
-        connect(audioCDLookup, &xAudioCDLookup::finished, this, &xMainAudioCDWidget::cddbFinished);
+        audioCDLookup = new xAudioCDLookup(id, this);
+        connect(audioCDLookup, &xAudioCDLookup::finished, this, &xMainAudioCDWidget::musicBrainzFinished);
         audioCDLookup->start();
     }
 }
 
-void xMainAudioCDWidget::cddbFinished() {
-    auto result = audioCDLookup->result();
-    audioCDArtistName->setText(result.at(0).artist);
-    audioCDAlbumName->setText(result.at(0).album);
-    audioTracks->setTrackNames(result.at(0).tracks);
+void xMainAudioCDWidget::musicBrainzFinished() {
+    lookupResults = audioCDLookup->result();
+    for (const auto& result : lookupResults) {
+        audioCDLookupResults->addItem(QString("%1 - %2").arg(result.artist).arg(result.album));
+    }
+    audioCDLookupResults->setCurrentIndex(0);
+}
+
+void xMainAudioCDWidget::musicBrainzUpdate(int index) {
+    if ((index >= 0) && (index < lookupResults.count())) {
+        auto result = lookupResults.at(index);
+        result.artist = updateString(result.artist);
+        result.album = updateString(result.album);
+        for (auto& track : result.tracks) {
+            track = updateString(track);
+        }
+        audioCDArtistName->setText(result.artist);
+        audioCDAlbumName->setText(result.album);
+        audioTracks->setTrackNames(result.tracks);
+    }
 }
 
 void xMainAudioCDWidget::autofill() {
@@ -157,8 +183,14 @@ void xMainAudioCDWidget::rip() {
     audioCDArtistName->setEnabled(false);
     audioCDDetectButton->setEnabled(false);
     audioCDEjectButton->setEnabled(true);
-    audioCDCDDBButton->setEnabled(false);
-    audioCDAutoFillButton->setEnabled(false);
+    audioCDAutofillButton->setEnabled(false);
+    audioCDLookupButton->setEnabled(false);
+    audioCDLookupResults->setEnabled(false);
+    audioCDTrackOffset->setEnabled(false);
+    audioCDLowerCase->setEnabled(false);
+    audioCDReplace->setEnabled(false);
+    audioCDReplaceFrom->setEnabled(false);
+    audioCDReplaceTo->setEnabled(false);
     audioTracksSelectButton->setEnabled(false);
     audioTracksRipButton->setEnabled(false);
     audioTracksRipCancelButton->setEnabled(true);
@@ -172,13 +204,20 @@ void xMainAudioCDWidget::ripCancel() {
 
 void xMainAudioCDWidget::ripMessage(int track, const QString& message) {
     if (track > 0) {
-        consoleText->append(QString("[Track %1] %2").arg(track).arg(message));
+        consoleText->append(QString("(track %1) %2").arg(track).arg(message));
     } else {
-        consoleText->append(QString("[All] %1").arg(message));
+        consoleText->append(message);
     }
 }
 
 void xMainAudioCDWidget::ripError(int track, const QString& error, bool abort) {
+    QString errorMessage;
+    if (track > 0) {
+        errorMessage = QString("(track %1) %2").arg(track).arg(error);
+    } else {
+        errorMessage = error;
+    }
+    consoleText->append(QString("[%1] %2").arg((abort)?"abort":"error").arg(errorMessage));
 }
 
 void xMainAudioCDWidget::ripFinished() {
@@ -186,36 +225,42 @@ void xMainAudioCDWidget::ripFinished() {
     audioCDArtistName->setEnabled(true);
     audioCDDetectButton->setEnabled(true);
     audioCDEjectButton->setEnabled(true);
-    audioCDCDDBButton->setEnabled(true);
-    audioCDAutoFillButton->setEnabled(true);
+    audioCDAutofillButton->setEnabled(true);
+    audioCDLookupButton->setEnabled(true);
+    audioCDLookupResults->setEnabled(true);
+    audioCDTrackOffset->setEnabled(true);
+    audioCDLowerCase->setEnabled(true);
+    audioCDReplace->setEnabled(true);
+    audioCDReplaceFrom->setEnabled(true);
+    audioCDReplaceTo->setEnabled(true);
     audioTracksSelectButton->setEnabled(true);
     audioTracksRipButton->setEnabled(true);
     audioTracksRipCancelButton->setEnabled(false);
 }
 
-void xMainAudioCDWidget::directory() {
-    QString tempFileDirectory =
-            QFileDialog::getExistingDirectory(this, tr("Temp File Directory"), configurationDirectory->text(),
-                                              QFileDialog::ShowDirsOnly|QFileDialog::DontResolveSymlinks);
-    if (!tempFileDirectory.isEmpty()) {
-        configurationDirectory->setText(tempFileDirectory);
-    }
-}
-
-void xMainAudioCDWidget::fileformat() {
-    QString fileFormatText = "<p><b>(artist)</b> : artist name for the audio CD</p>"
-                             "<p><b>(album)</b> : album name for the audio CD</p>"
-                             "<p><b>(tracknr)</b> : number for each audio track </p>"
-                             "<p><b>(trackname)</b> : name for each audio track </p><p></p>";
-    QMessageBox::information(this, tr("File Format"), fileFormatText);
-}
+// void xMainAudioCDWidget::directory() {
+//     QString tempFileDirectory =
+//             QFileDialog::getExistingDirectory(this, tr("Temp File Directory"), configurationDirectory->text(),
+//                                               QFileDialog::ShowDirsOnly|QFileDialog::DontResolveSymlinks);
+//     if (!tempFileDirectory.isEmpty()) {
+//         configurationDirectory->setText(tempFileDirectory);
+//     }
+// }
+//
+// void xMainAudioCDWidget::fileformat() {
+//     QString fileFormatText = "<p><b>(artist)</b> : artist name for the audio CD</p>"
+//                              "<p><b>(album)</b> : album name for the audio CD</p>"
+//                              "<p><b>(tracknr)</b> : number for each audio track </p>"
+//                              "<p><b>(trackname)</b> : name for each audio track </p><p></p>";
+//     QMessageBox::information(this, tr("File Format"), fileFormatText);
+// }
 
 QList<std::pair<int,QString>> xMainAudioCDWidget::getTrackNames() {
     QList<std::pair<int,QString>> trackNames;
     auto selectedTracks = audioTracks->isSelected();
     auto artistName = audioCDArtistName->text();
     auto albumName = audioCDAlbumName->text();
-    auto fileFormat = configurationFileFormat->text();
+    auto fileFormat = QString("(artist)#(album)#(tracknr) (trackname)");
     fileFormat.replace("(artist)", artistName);
     fileFormat.replace("(album)", albumName);
     for (const auto& track : selectedTracks) {
@@ -226,4 +271,22 @@ QList<std::pair<int,QString>> xMainAudioCDWidget::getTrackNames() {
         trackNames.push_back(std::make_pair(std::get<0>(track), trackFileFormat));
     }
     return trackNames;
+}
+
+QString xMainAudioCDWidget::updateString(const QString& text) {
+    QString updatedText;
+    if (audioCDLowerCase->isChecked()) {
+        updatedText = text.toLower();
+    } else {
+        updatedText = text;
+    }
+    auto updateFrom = audioCDReplaceFrom->text().split('|');
+    auto updateTo = audioCDReplaceTo->text().split('|');
+    // Replace all characters if from and to strings are the same length
+    if (updateFrom.count() == updateTo.count()) {
+        for (auto index = 0; index < updateFrom.length(); ++index) {
+            updatedText.replace(updateFrom.at(index), updateTo.at(index));
+        }
+    }
+    return updatedText;
 }

@@ -18,6 +18,9 @@
 #include "xAudioCD.h"
 #include "xAudioTracksWidget.h"
 #include <QPushButton>
+#include <QComboBox>
+#include <QCheckBox>
+#include <QSpinBox>
 #include <QTextEdit>
 #include <QWidget>
 
@@ -31,28 +34,32 @@ public:
 private slots:
     void detect();
     void eject();
-    void cddb();
-    void cddbFinished();
+    void musicBrainz();
+    void musicBrainzFinished();
+    void musicBrainzUpdate(int index);
     void autofill();
     void rip();
     void ripCancel();
     void ripMessage(int track, const QString& message);
     void ripError(int track, const QString& error, bool abort);
     void ripFinished();
-    void directory();
-    void fileformat();
 
 private:
     QList<std::pair<int,QString>> getTrackNames();
+    QString updateString(const QString& text);
 
     QLineEdit* audioCDArtistName;
     QLineEdit* audioCDAlbumName;
     QPushButton* audioCDDetectButton;
     QPushButton* audioCDEjectButton;
-    QPushButton* audioCDAutoFillButton;
-    QPushButton* audioCDCDDBButton;
-    QLineEdit* configurationFileFormat;
-    QLineEdit* configurationDirectory;
+    QPushButton* audioCDAutofillButton;
+    QPushButton* audioCDLookupButton;
+    QComboBox* audioCDLookupResults;
+    QSpinBox* audioCDTrackOffset;
+    QCheckBox* audioCDLowerCase;
+    QCheckBox* audioCDReplace;
+    QLineEdit* audioCDReplaceFrom;
+    QLineEdit* audioCDReplaceTo;
     xAudioTracksWidget* audioTracks;
     QPushButton* audioTracksSelectButton;
     QPushButton* audioTracksRipButton;
@@ -60,6 +67,7 @@ private:
     QTextEdit* consoleText;
     xAudioCD* audioCD;
     xAudioCDLookup* audioCDLookup;
+    QList<xAudioCDLookup::xAudioCDLookupResult> lookupResults;
 };
 
 #endif
