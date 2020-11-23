@@ -46,10 +46,9 @@
  * This class handles the MusicBrainz lookup in a separate thread. The for the lookup required ID
  * is computed in the xAudioCD class.
  */
-xAudioCDLookup::xAudioCDLookup(const QString& id, bool lowerCase, QObject* parent):
+xAudioCDLookup::xAudioCDLookup(const QString& id, QObject* parent):
         QThread(parent),
-        musicBrainzID(id),
-        lowerCaseResults(lowerCase) {
+        musicBrainzID(id) {
 }
 
 QList<xAudioCDLookup::xAudioCDLookupResult> xAudioCDLookup::result() const {
@@ -81,21 +80,13 @@ void xAudioCDLookup::run() {
                     MusicBrainz5::CMediumList mediaList = fullRelease->MediaMatchingDiscID(musicBrainzID.toStdString());
                     if (mediaList.NumItems() != 0) {
                         if (fullRelease->ReleaseGroup()) {
-                            if (lowerCaseResults) {
-                                audioCDLookupResult.album = QString::fromStdString(fullRelease->ReleaseGroup()->Title()).toLower();
-                            } else {
-                                audioCDLookupResult.album = QString::fromStdString(fullRelease->ReleaseGroup()->Title());
-                            }
+                            audioCDLookupResult.album = QString::fromStdString(fullRelease->ReleaseGroup()->Title());
                             qDebug() << "Album: '" << audioCDLookupResult.album << "'";
                             if (fullRelease->ReleaseGroup()->ArtistCredit()) {
                                 MusicBrainz5::CNameCreditList* nameCreditList = fullRelease->ReleaseGroup()->ArtistCredit()->NameCreditList();
                                 if (nameCreditList) {
                                     MusicBrainz5::CNameCredit name = *nameCreditList->Item(0);
-                                    if (lowerCaseResults) {
-                                        audioCDLookupResult.artist = QString::fromStdString(name.Artist()->Name()).toLower();
-                                    } else {
-                                        audioCDLookupResult.artist = QString::fromStdString(name.Artist()->Name());
-                                    }
+                                    audioCDLookupResult.artist = QString::fromStdString(name.Artist()->Name());
                                     qDebug() << "Artist: '" << audioCDLookupResult.artist << "'";
                                 }
                             }
@@ -117,9 +108,6 @@ void xAudioCDLookup::run() {
                                     } else {
                                         trackName = QString::fromStdString(track->Title());
                                     }
-                                    if (lowerCaseResults) {
-                                        trackName = trackName.toLower();
-                                    }
                                     audioCDLookupResult.tracks.push_back(trackName);
                                 }
                             }
@@ -129,7 +117,21 @@ void xAudioCDLookup::run() {
                 qDebug() << "Result(artist): " << audioCDLookupResult.artist;
                 qDebug() << "Result(album): " << audioCDLookupResult.album;
                 qDebug() << "Result(tracks): " << audioCDLookupResult.tracks;
-                musicBrainzResult.push_back(audioCDLookupResult);
+                // Check for duplicates.
+                bool duplicate = false;
+                for (const auto& result : musicBrainzResult) {
+                    if ((result.artist == audioCDLookupResult.artist) &&
+                        (result.album == audioCDLookupResult.album) &&
+                        (result.tracks == audioCDLookupResult.tracks)) {
+                        qDebug() << "Duplicate result found. Ignoring.";
+                        duplicate = true;
+                        break;
+                    }
+                }
+                // Only add if it is not a duplicate.
+                if (!duplicate) {
+                    musicBrainzResult.push_back(audioCDLookupResult);
+                }
             }
         }
     } catch (MusicBrainz5::CExceptionBase& error) {
@@ -228,6 +230,7 @@ xAudioCD::xAudioCD(QObject* parent):
         QObject(parent),
         audioDrive(nullptr),
         audioRipper(nullptr) {
+
 }
 
 xAudioCD::~xAudioCD() {

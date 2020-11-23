@@ -41,11 +41,11 @@ public:
      * @param lowerCase convert the query results to lower case if true.
      * @param parent pointer to the parent widget.
      */
-    xAudioCDLookup(const QString& id, bool lowerCase=true, QObject* parent=nullptr);
+    explicit xAudioCDLookup(const QString& id, QObject* parent=nullptr);
     /**
      * Destructor (default)
      */
-    ~xAudioCDLookup() = default;
+    ~xAudioCDLookup() override = default;
     /**
      * Run the query to MusicBrainz.
      *
@@ -58,12 +58,11 @@ public:
      *
      * @return a list of structs that contains artist, album and track list.
      */
-    QList<xAudioCDLookupResult> result() const;
+    [[nodiscard]] QList<xAudioCDLookupResult> result() const;
 
 private:
     QString musicBrainzID;
     QList<xAudioCDLookupResult> musicBrainzResult;
-    bool lowerCaseResults;
 };
 
 class xAudioCDRipper:public QThread {
@@ -81,7 +80,7 @@ public:
     /**
      * Destructor (default)
      */
-    ~xAudioCDRipper() = default;
+    ~xAudioCDRipper() override = default;
     /**
      * Start the rip process.
      *
@@ -132,32 +131,34 @@ class xAudioCD: public QObject {
     Q_OBJECT
 
 public:
-    xAudioCD(QObject* parent=nullptr);
-    ~xAudioCD();
-
+    explicit xAudioCD(QObject* parent=nullptr);
+    ~xAudioCD() override;
     /**
      * Autodetect audio CD.
      *
      * @return true if an audio CD is detected, false otherwise.
      */
-    bool detect();
+    [[nodiscard]] bool detect();
     /**
      * Eject the audio CD if previously detected.
      */
     void eject();
+    /**
+     * Close the audio CD if preciously detected.
+     */
     void close();
     /**
      * Determine the number of tracks of the audio CD.
      *
      * @return number of tracks if detected, -1 otherwise.
      */
-    int getTracks();
+    [[nodiscard]] int getTracks();
     /**
      * Compute the ID of the audio CD for MusicBrainz
      *
-     * @return the ID as string. Return empty string on errro.
+     * @return the ID as string. Return empty string on error.
      */
-    QString getID();
+    [[nodiscard]] QString getID();
     /**
      * Rip the tracks from the audio CD.
      *
@@ -171,14 +172,14 @@ public:
 
 signals:
     /**
-     * Signal emitted (forwared) to show the rip progress.
+     * Signal emitted (forwarded) to show the rip progress.
      *
      * @param track number of the current track that is ripped.
      * @param percent the percentage for the current track.
      */
     void ripProgress(int track, int percent);
     /**
-     * Signal emitted (forwared) if an error occurs during the rip process.
+     * Signal emitted (forwarded) if an error occurs during the rip process.
      *
      * @param track number of the current track that is ripped.
      * @param error the error message as string.
@@ -186,7 +187,7 @@ signals:
      */
     void ripError(int track, const QString& error, bool abort);
     /**
-     * Signal emitted (forwared) if a message occurs during the rip process.
+     * Signal emitted (forwarded) if a message occurs during the rip process.
      *
      * @param track number of the current track that is ripped.
      * @param message the rip message as string.
