@@ -46,7 +46,7 @@ xAudioTrackItemWidget::xAudioTrackItemWidget(int track, int offset, QWidget* par
     setFixedHeight(sizeHint().height());
 }
 
-int xAudioTrackItemWidget::getAudioTrackNr() {
+int xAudioTrackItemWidget::getAudioTrackNr() const {
     return audioTrackNr;
 }
 
@@ -55,11 +55,11 @@ void xAudioTrackItemWidget::setAudioTrackOffset(int offset) {
     trackNr->setText(QString("%1").arg(audioTrackNr+audioTrackOffset, 2, 10, QChar('0')));
 }
 
-int xAudioTrackItemWidget::getAudioTrackOffset() {
+int xAudioTrackItemWidget::getAudioTrackOffset() const {
     return audioTrackOffset;
 }
 
-QString xAudioTrackItemWidget::getTrackNr() {
+QString xAudioTrackItemWidget::getTrackNr() const {
     return trackNr->text();
 }
 
@@ -67,7 +67,7 @@ void xAudioTrackItemWidget::setTrackName(const QString& name) {
     trackName->setText(name);
 }
 
-QString xAudioTrackItemWidget::getTrackName() {
+QString xAudioTrackItemWidget::getTrackName() const {
     return trackName->text();
 }
 
@@ -109,6 +109,9 @@ void xAudioTracksWidget::autofill() {
 void xAudioTracksWidget::setTrackOffset(int offset) {
     if (offset >= 0) {
         audioTracksOffset = offset;
+        for (const auto& track : audioTracks) {
+            track->setAudioTrackOffset(offset);
+        }
     }
 }
 
