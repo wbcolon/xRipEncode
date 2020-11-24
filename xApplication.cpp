@@ -11,11 +11,13 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  */
+#include "xApplication.h"
+#include "xRipEncodeConfigurationDialog.h"
+#include "xRipEncodeConfiguration.h"
+
 #include <QMenuBar>
 #include <QFileDialog>
 #include <QInputDialog>
-
-#include "xApplication.h"
 
 xApplication::xApplication(QWidget* parent, Qt::WindowFlags flags):
         QMainWindow(parent, flags) {
@@ -30,13 +32,23 @@ xApplication::xApplication(QWidget* parent, Qt::WindowFlags flags):
 xApplication::~xApplication() noexcept {
 }
 
+void xApplication::configure() {
+    xRipEncodeConfigurationDialog configurationDialog;
+    configurationDialog.show();
+    configurationDialog.exec();
+}
+
 void xApplication::createMenus() {
     // Create actions for file menu.
+    auto fileMenuConfigure = new QAction("&Configure", this);
     auto fileMenuExitAction = new QAction(tr("&Exit"), this);
     // Connect actions from file menu.
+    connect(fileMenuConfigure, &QAction::triggered, this, &xApplication::configure);
     connect(fileMenuExitAction, &QAction::triggered, this, &xApplication::close);
     // Create file menu.
     auto fileMenu = menuBar()->addMenu(tr("&File"));
+    fileMenu->addAction(fileMenuConfigure);
+    fileMenu->addSeparator();
     fileMenu->addAction(fileMenuExitAction);
 }
 

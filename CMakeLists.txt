@@ -27,10 +27,12 @@ set(CMAKE_REQUIRED_INCLUDES "${LIBMUSICBRAINZ5CC_INCLUDE_DIRS} ${LIBCDIO_INCLUDE
 set(CMAKE_REQUIRED_LIBRARIES "${LIBMUSICBRAINZ5CC_LIBRARIES} ${LIBCDIO_LIBRARIES} ${LIBCDIO_CDDA_LIBRARIES} ${LIBCDIO_PARANOIA_LIBRARIES}")
 
 add_executable(xRipEncode
-        xApplication.cpp
+        xRipEncodeConfiguration.cpp
+        xRipEncodeConfigurationDialog.cpp
+        xAudioCD.cpp
         xAudioTracksWidget.cpp
         xMainAudioCDWidget.cpp
-        xAudioCD.cpp
+        xApplication.cpp
         xRipEncode.cpp)
 
 target_link_libraries(xRipEncode KF5::Cddb Qt5::Widgets Qt5::DBus ${LIBMUSICBRAINZ5CC_LIBRARIES} ${LIBCDIO_PARANOIA_LIBRARIES} ${LIBCDIO_CDDA_LIBRARIES} ${LIBCDIO_LIBRARIES})

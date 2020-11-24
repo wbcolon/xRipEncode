@@ -24,8 +24,11 @@
 
 class xApplication:public QMainWindow {
 public:
-    xApplication(QWidget* parent=nullptr, Qt::WindowFlags flags=Qt::WindowFlags());
-    ~xApplication() noexcept;
+    explicit xApplication(QWidget* parent=nullptr, Qt::WindowFlags flags=Qt::WindowFlags());
+    ~xApplication() noexcept override;
+
+private slots:
+    void configure();
 
 private:
     /**
