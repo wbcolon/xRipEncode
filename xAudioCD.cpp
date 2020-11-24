@@ -19,6 +19,7 @@
  */
 
 #include "xAudioCD.h"
+#include "xRipEncodeConfiguration.h"
 #include <QFile>
 #include <QDataStream>
 #include <QCryptographicHash>
@@ -153,6 +154,8 @@ xAudioCDRipper::xAudioCDRipper(cdrom_drive_t* drive, const QList<std::pair<int, 
 }
 
 void xAudioCDRipper::run() {
+    // Retrieve current temp file.
+    auto tempFileDirectory = xRipEncodeConfiguration::configuration()->getTempFileDirectory();
     // Init paranoia.
     cdrom_paranoia_t* audioDriveParanoia = paranoia_init(audioDrive);
     for (const auto& track : audioTracks) {
@@ -168,8 +171,13 @@ void xAudioCDRipper::run() {
         // Compute byte count. We need the size for the wav header.
         int byteCount = (iLastLsn-iFirstLsn+1) * CDIO_CD_FRAMESIZE_RAW;
         // Create wave file.
-        QFile wavFile(track.second);
-        wavFile.open(QIODevice::WriteOnly);
+        auto wavFilePath = tempFileDirectory+"/"+track.second;
+        QFile wavFile(wavFilePath);
+        if (!wavFile.open(QIODevice::WriteOnly)) {
+            qCritical() << "Unable to open wav file: " << wavFilePath;
+            emit error(track.first, "Unable to open wav file: "+wavFilePath, true);
+            continue;
+        }
         QDataStream wavFileStream(&wavFile);
         wavFileStream.setByteOrder(QDataStream::LittleEndian);
         // Write the wav header.
