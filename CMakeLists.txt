@@ -32,6 +32,7 @@ add_executable(xRipEncode
         xAudioCD.cpp
         xAudioTracksWidget.cpp
         xMainAudioCDWidget.cpp
+        xMovieFile.cpp
         xApplication.cpp
         xRipEncode.cpp)
 
