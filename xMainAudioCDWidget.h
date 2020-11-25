@@ -21,6 +21,7 @@
 #include <QComboBox>
 #include <QCheckBox>
 #include <QSpinBox>
+#include <QListWidget>
 #include <QTextEdit>
 #include <QWidget>
 
@@ -58,8 +59,7 @@ private:
     QSpinBox* audioCDTrackOffset;
     QCheckBox* audioCDLowerCase;
     QCheckBox* audioCDReplace;
-    QLineEdit* audioCDReplaceFrom;
-    QLineEdit* audioCDReplaceTo;
+    QListWidget* audioCDReplaceView;
     xAudioTracksWidget* audioTracks;
     QPushButton* audioTracksSelectButton;
     QPushButton* audioTracksRipButton;

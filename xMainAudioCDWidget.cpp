@@ -13,6 +13,7 @@
  */
 
 #include "xMainAudioCDWidget.h"
+#include "xRipEncodeConfiguration.h"
 #include <QGridLayout>
 #include <QLabel>
 #include <QGroupBox>
@@ -52,8 +53,12 @@ xMainAudioCDWidget::xMainAudioCDWidget(QWidget *parent, Qt::WindowFlags flags):
     audioCDLowerCase->setChecked(true);
     audioCDReplace = new QCheckBox(tr("Replace"), audioCDBox);
     audioCDReplace->setChecked(false);
-    audioCDReplaceTo = new QLineEdit(audioCDBox);
-    audioCDReplaceFrom = new QLineEdit(audioCDBox);
+    audioCDReplaceView = new QListWidget(audioCDBox);
+    // Fill replace view.
+    auto replace = xRipEncodeConfiguration::configuration()->getFileNameReplace();
+    for (const auto& entry : replace) {
+        audioCDReplaceView->addItem(QString(R"(replace "%1" with "%2")").arg(entry.first).arg(entry.second));
+    }
     audioCDLayout->addWidget(audioCDLookupResultsLabel, 7, 0, 1, 5);
     audioCDLayout->addWidget(audioCDTrackOffsetLabel, 7, 5, 1, 1);
     audioCDLayout->addWidget(audioCDLookupResults, 8, 0, 1, 5);
@@ -62,14 +67,13 @@ xMainAudioCDWidget::xMainAudioCDWidget(QWidget *parent, Qt::WindowFlags flags):
     audioCDLayout->setRowStretch(9, 0);
     audioCDLayout->addWidget(audioCDLowerCase, 10, 0, 1, 1);
     audioCDLayout->addWidget(audioCDReplace, 10, 1, 1, 1);
-    audioCDLayout->addWidget(audioCDReplaceFrom, 10, 2, 1, 2);
-    audioCDLayout->addWidget(audioCDReplaceTo, 10, 4, 1, 2);
-    audioCDLayout->setRowMinimumHeight(11, 50);
-    audioCDLayout->setRowStretch(11, 0);
-    audioCDLayout->addWidget(audioCDLookupButton, 12, 0, 1, 3);
-    audioCDLayout->addWidget(audioCDAutofillButton, 12, 3, 1, 3);
-    audioCDLayout->setRowMinimumHeight(13, 20);
-    audioCDLayout->setRowStretch(13, 0);
+    audioCDLayout->addWidget(audioCDReplaceView, 10, 2, 2, 4);
+    audioCDLayout->setRowMinimumHeight(12, 50);
+    audioCDLayout->setRowStretch(12, 0);
+    audioCDLayout->addWidget(audioCDLookupButton, 13, 0, 1, 3);
+    audioCDLayout->addWidget(audioCDAutofillButton, 13, 3, 1, 3);
+    audioCDLayout->setRowMinimumHeight(14, 20);
+    audioCDLayout->setRowStretch(14, 0);
     audioCDBox->setLayout(audioCDLayout);
     // Audio tracks box.
     auto audioTracksBox = new QGroupBox(tr("Audio Tracks"), this);
@@ -133,10 +137,12 @@ void xMainAudioCDWidget::musicBrainz() {
 
 void xMainAudioCDWidget::musicBrainzFinished() {
     lookupResults = audioCDLookup->result();
+    audioCDLookupResults->clear();
     for (const auto& result : lookupResults) {
         audioCDLookupResults->addItem(QString("%1 - %2").arg(result.artist).arg(result.album));
     }
     audioCDLookupResults->setCurrentIndex(0);
+    musicBrainzUpdate(0);
 }
 
 void xMainAudioCDWidget::musicBrainzUpdate(int index) {
@@ -164,6 +170,8 @@ void xMainAudioCDWidget::detect() {
     if (audioCD->detect()) {
         // Fill in an item for each track on the audio CD.
         audioTracks->setTracks(audioCD->getTracks());
+        // Fill in the times.
+        audioTracks->setTrackLengths(audioCD->getTrackLengths());
     }
 }
 
@@ -189,8 +197,7 @@ void xMainAudioCDWidget::rip() {
     audioCDTrackOffset->setEnabled(false);
     audioCDLowerCase->setEnabled(false);
     audioCDReplace->setEnabled(false);
-    audioCDReplaceFrom->setEnabled(false);
-    audioCDReplaceTo->setEnabled(false);
+    audioCDReplaceView->setEnabled(false);
     audioTracksSelectButton->setEnabled(false);
     audioTracksRipButton->setEnabled(false);
     audioTracksRipCancelButton->setEnabled(true);
@@ -231,36 +238,18 @@ void xMainAudioCDWidget::ripFinished() {
     audioCDTrackOffset->setEnabled(true);
     audioCDLowerCase->setEnabled(true);
     audioCDReplace->setEnabled(true);
-    audioCDReplaceFrom->setEnabled(true);
-    audioCDReplaceTo->setEnabled(true);
+    audioCDReplaceView->setEnabled(true);
     audioTracksSelectButton->setEnabled(true);
     audioTracksRipButton->setEnabled(true);
     audioTracksRipCancelButton->setEnabled(false);
 }
-
-// void xMainAudioCDWidget::directory() {
-//     QString tempFileDirectory =
-//             QFileDialog::getExistingDirectory(this, tr("Temp File Directory"), configurationDirectory->text(),
-//                                               QFileDialog::ShowDirsOnly|QFileDialog::DontResolveSymlinks);
-//     if (!tempFileDirectory.isEmpty()) {
-//         configurationDirectory->setText(tempFileDirectory);
-//     }
-// }
-//
-// void xMainAudioCDWidget::fileformat() {
-//     QString fileFormatText = "<p><b>(artist)</b> : artist name for the audio CD</p>"
-//                              "<p><b>(album)</b> : album name for the audio CD</p>"
-//                              "<p><b>(tracknr)</b> : number for each audio track </p>"
-//                              "<p><b>(trackname)</b> : name for each audio track </p><p></p>";
-//     QMessageBox::information(this, tr("File Format"), fileFormatText);
-// }
 
 QList<std::pair<int,QString>> xMainAudioCDWidget::getTrackNames() {
     QList<std::pair<int,QString>> trackNames;
     auto selectedTracks = audioTracks->isSelected();
     auto artistName = audioCDArtistName->text();
     auto albumName = audioCDAlbumName->text();
-    auto fileFormat = QString("(artist)#(album)#(tracknr) (trackname)");
+    auto fileFormat = xRipEncodeConfiguration::configuration()->getFileNameFormat();
     fileFormat.replace("(artist)", artistName);
     fileFormat.replace("(album)", albumName);
     for (const auto& track : selectedTracks) {
@@ -280,13 +269,10 @@ QString xMainAudioCDWidget::updateString(const QString& text) {
     } else {
         updatedText = text;
     }
-    auto updateFrom = audioCDReplaceFrom->text().split('|');
-    auto updateTo = audioCDReplaceTo->text().split('|');
+    auto replace = xRipEncodeConfiguration::configuration()->getFileNameReplace();
     // Replace all characters if from and to strings are the same length
-    if (updateFrom.count() == updateTo.count()) {
-        for (auto index = 0; index < updateFrom.length(); ++index) {
-            updatedText.replace(updateFrom.at(index), updateTo.at(index));
-        }
+    for (const auto& entry : replace) {
+        updatedText.replace(entry.first, entry.second);
     }
     return updatedText;
 }
