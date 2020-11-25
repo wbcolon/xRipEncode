@@ -18,6 +18,7 @@
 #include <QLineEdit>
 #include <QProgressBar>
 #include <QStackedWidget>
+#include <QLabel>
 #include <QDebug>
 
 xAudioTrackItemWidget::xAudioTrackItemWidget(int track, int offset, QWidget* parent):
@@ -37,11 +38,16 @@ xAudioTrackItemWidget::xAudioTrackItemWidget(int track, int offset, QWidget* par
     trackNr->setAlignment(Qt::AlignCenter);
     trackNr->setFixedWidth(40);
     trackNr->setText(QString("%1").arg(audioTrackNr+audioTrackOffset, 2, 10, QChar('0')));
+    trackLength = new QLabel(this);
+    trackLength->setFixedWidth(trackLength->fontMetrics().boundingRect("01:23:45.678").width());
+    trackLength->setAlignment(Qt::AlignCenter);
     trackLayout->addWidget(trackSelect, 0, 0);
     trackLayout->addWidget(trackNr, 0, 1);
     trackLayout->addWidget(trackStacked, 0, 2, 1, 10);
+    trackLayout->addWidget(trackLength, 0, 12, 1, 1);
     trackLayout->setColumnStretch(1, 0);
     trackLayout->setColumnStretch(2, 2);
+    trackLayout->setColumnStretch(1, 0);
     setLayout(trackLayout);
     setFixedHeight(sizeHint().height());
 }
@@ -71,6 +77,10 @@ QString xAudioTrackItemWidget::getTrackName() const {
     return trackName->text();
 }
 
+void xAudioTrackItemWidget::setTrackLength(const QString& length) {
+    trackLength->setText(length);
+}
+
 void xAudioTrackItemWidget::setSelected(bool select) {
     trackSelect->setChecked(select);
 }
@@ -87,6 +97,7 @@ void xAudioTrackItemWidget::trackInput(bool autofill) {
 }
 
 void xAudioTrackItemWidget::ripProgress(int progress) {
+    trackProgress->setFormat(trackName->text()+" - %p%");
     trackStacked->setCurrentWidget(trackProgress);
     trackProgress->setValue(progress);
 }
@@ -119,6 +130,20 @@ void xAudioTracksWidget::setTrackNames(const QVector<QString>& names) {
     if (names.count() == audioTracks.count()) {
         for (int track = 0; track < audioTracks.count(); ++track) {
             audioTracks[track]->setTrackName(names[track]);
+        }
+    }
+}
+
+QString xAudioTracksWidget::millisecondsToLabel(qint64 ms) {
+    return QString("%1:%2.%3").arg(ms/60000).
+            arg((ms/1000)%60, 2, 10, QChar('0')).
+            arg(((ms%1000)+5)/10, 2, 10, QChar('0'));
+}
+
+void xAudioTracksWidget::setTrackLengths(const QVector<qint64>& times) {
+    if (times.count() == audioTracks.count()) {
+        for (int track = 0; track < audioTracks.count(); ++track) {
+            audioTracks[track]->setTrackLength(xAudioTracksWidget::millisecondsToLabel(times[track]));
         }
     }
 }

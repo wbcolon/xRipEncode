@@ -23,6 +23,7 @@
 #include <QStackedWidget>
 #include <QProgressBar>
 #include <QList>
+#include <QLabel>
 #include <QWidget>
 
 class xAudioTrackItemWidget:public QWidget {
@@ -78,6 +79,12 @@ public:
      */
     [[nodiscard]] QString getTrackName() const;
     /**
+     * Set the track length for file name.
+     *
+     * @param length the track length as proper formatted as string.
+     */
+    void setTrackLength(const QString& length);
+    /**
      * Select/deselect the current track.
      *
      * @param select select if the true, deselect otherwise.
@@ -108,6 +115,7 @@ private:
     QCheckBox* trackSelect;
     QLineEdit* trackNr;
     QLineEdit* trackName;
+    QLabel* trackLength;
     QProgressBar* trackProgress;
     QStackedWidget* trackStacked;
 };
@@ -143,6 +151,12 @@ public:
      */
     void setTrackNames(const QVector<QString>& names);
     /**
+     * Set the track times.
+     *
+     * @param lengths a vector of track lengths in ms.
+     */
+    void setTrackLengths(const QVector<qint64>& lengths);
+    /**
      * Clear the widget. Remove all tracks.
      */
     void clear();
@@ -173,6 +187,9 @@ public slots:
     void ripProgress(int track, int progress);
 
 private:
+    static QString millisecondsToLabel(qint64 ms);
+
+
     int audioTracksOffset;
     QWidget* audioMain;
     QVBoxLayout* audioLayout;
