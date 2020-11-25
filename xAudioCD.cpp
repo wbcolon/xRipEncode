@@ -309,6 +309,22 @@ int xAudioCD::getTracks() {
     }
 }
 
+QVector<qint64> xAudioCD::getTrackLengths() {
+    QVector<qint64> lengths;
+    if (audioDrive) {
+        auto tracks = cdio_cddap_tracks(audioDrive);
+        for (auto i = 1; i <= tracks; ++i) {
+            auto firstSector = cdio_cddap_track_firstsector(audioDrive, i);
+            auto lastSector = cdio_cddap_track_lastsector(audioDrive, i);
+            qDebug() << "getTrackLengths in sectors: " << lastSector-firstSector+1;
+            qint64 lengthInMs = static_cast<qint64>(lastSector-firstSector+1)*1000/75;
+            qDebug() << "getTrackLength in ms: " << lengthInMs;
+            lengths.push_back(lengthInMs);
+        }
+    }
+    return lengths;
+}
+
 QString xAudioCD::getID() {
     if (!audioDrive) {
         return QString();

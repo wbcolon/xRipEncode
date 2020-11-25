@@ -154,6 +154,12 @@ public:
      */
     [[nodiscard]] int getTracks();
     /**
+     * Compute the times for each track of the audio CD.
+     *
+     * @return a vector of track length in milliseconds.
+     */
+    [[nodiscard]] QVector<qint64> getTrackLengths();
+    /**
      * Compute the ID of the audio CD for MusicBrainz
      *
      * @return the ID as string. Return empty string on error.
