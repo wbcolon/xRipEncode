@@ -12,14 +12,15 @@
  * GNU General Public License for more details.
  */
 
-#ifndef __XAUDIOTRACKSWIDGET_H__
-#define __XAUDIOTRACKSWIDGET_H__
+#ifndef __XENCODINGTRACKSWIDGET_H__
+#define __XENCODINGTRACKSWIDGET_H__
 
+#include "xAudioFile.h"
+#include <QVBoxLayout>
 #include <QScrollArea>
 #include <QLineEdit>
+#include <QPushButton>
 #include <QCheckBox>
-#include <QGroupBox>
-#include <QVBoxLayout>
 #include <QStackedWidget>
 #include <QProgressBar>
 #include <QList>
@@ -27,43 +28,31 @@
 #include <QWidget>
 
 
-class xAudioTrackItemWidget:public QWidget {
+class xEncodingTrackItemWidget:public QWidget {
     Q_OBJECT
 
 public:
-    /**
-     * Constructor
-     *
-     * The numbering for the track number of the audio CD or the
-     * chapter (track) of a movie file starts with index 1.
-     *
-     * @param track the track number of the audio CD or movie file.
-     * @param offset the offset in the file name.
-     * @param parent pointer to the parent object.
-     */
-    explicit xAudioTrackItemWidget(int track, int offset=0, QWidget* parent=nullptr);
+    explicit xEncodingTrackItemWidget(xAudioFile* file, QWidget* parent=nullptr);
     /**
      * Destructor.
      */
-    ~xAudioTrackItemWidget() override = default;
+    ~xEncodingTrackItemWidget() override = default;
+
+    void setArtist(const QString& artist);
+    void setAlbum(const QString& album);
+    void setTag(const QString& tag);
+    void setTrackNrOffset(int offset);
+    void setTrackNr(const QString& nr);
     /**
-     * Retrieve the track number for the audio CD or movie file.
+     * Set the track name used in the file name.
      *
-     * @return the track number as integer.
+     * @param name the new track name as string.
      */
-    [[nodiscard]] int getAudioTrackNr() const;
-    /**
-     * Set the offset for the file name.
-     *
-     * @param offset the offset to the track number as integer.
-     */
-    void setAudioTrackOffset(int offset);
-    /**
-     * Retrieve the current offset used in the file name.
-     *
-     * @return the offset of the track number as integer.
-     */
-    [[nodiscard]] int getAudioTrackOffset() const;
+    void setTrackName(const QString& name);
+
+    [[nodiscard]] QString getArtist() const;
+    [[nodiscard]] QString getAlbum() const;
+    [[nodiscard]] QString getTag() const;
     /**
      * Retrieve the track number used in the file name.
      *
@@ -71,23 +60,11 @@ public:
      */
     [[nodiscard]] QString getTrackNr() const;
     /**
-     * Set the track name used in the file name.
-     *
-     * @param name the new track name as string.
-     */
-    void setTrackName(const QString& name);
-    /**
      * Retrieve the track name used in the file name.
      *
      * @return the current track name as string.
      */
     [[nodiscard]] QString getTrackName() const;
-    /**
-     * Set the track length for file name.
-     *
-     * @param length the track length as formatted as string.
-     */
-    void setTrackLength(const QString& length);
     /**
      * Select/deselect the current track.
      *
@@ -100,12 +77,14 @@ public:
      * @return true if the current track is selected, false otherwise.
      */
     [[nodiscard]] bool isSelected() const;
+
+    void viewOutput(bool autofill=false);
     /**
      * Switch to the track name view of the widget.
      *
      * @param autofill set a generic name if true.
      */
-    void trackInput(bool autofill=false);
+    void viewInput();
     /**
      * Switch to the progress view of the widget.
      *
@@ -113,26 +92,33 @@ public:
      */
     void ripProgress(int progress);
 
+private slots:
+    void toggleViews();
+
 private:
-    int audioTrackNr;
-    int audioTrackOffset;
-    QCheckBox* trackSelect;
+    xAudioFile* audioFile;
+    QPushButton* editInfo;
+    QLabel* encodedFileName;
+    QProgressBar* encodedProgress;
+    QWidget* trackInfo;
+    QLineEdit* artistName;
+    QLineEdit* albumName;
+    QLineEdit* tagName;
     QLineEdit* trackNr;
     QLineEdit* trackName;
-    QLabel* trackLength;
-    QProgressBar* trackProgress;
-    QStackedWidget* trackStacked;
+    QCheckBox* trackSelect;
+    QStackedWidget* mainStacked;
 };
 
 /**
- * @class xAudioTrackWidget
+ * @class xEncodingTrackWidget
  *
  * @note An audio track represents either a dedicated track on an audio
  * CD or a section of an audio stream of a movie file. The section in a
  * movie file (named track) is usually accessed through chapters in the
  * movie file.
  */
-class xAudioTracksWidget:public QScrollArea {
+class xEncodingTracksWidget:public QScrollArea {
     Q_OBJECT
 
 public:
@@ -141,11 +127,11 @@ public:
      *
      * @param parent pointer to the parent object.
      */
-    explicit xAudioTracksWidget(QWidget* parent=nullptr);
+    explicit xEncodingTracksWidget(QWidget* parent=nullptr);
     /**
      * Destructor
      */
-    ~xAudioTracksWidget() override = default;
+    ~xEncodingTracksWidget() override = default;
     /**
      * Set all track names using the generic name "track".
      */
@@ -161,23 +147,11 @@ public:
      *
      * @param names the new track names as vector of strings.
      */
-    void setTrackNames(const QVector<QString>& names);
-    /**
-     * Set the lengths for each track.
-     *
-     * @param lengths a vector of track lengths in ms.
-     */
-    void setTrackLengths(const QVector<qint64>& lengths);
+    void setTracks(const QVector<xAudioFile*>& files);
     /**
      * Clear the widget. Remove all tracks.
      */
     void clear();
-    /**
-     * Return the selected tracks.
-     *
-     * @return a list of tuples of audio track index, track number and track name.
-     */
-    [[nodiscard]] QList<std::tuple<int,QString,QString>> isSelected();
 
 public slots:
     /**
@@ -199,12 +173,11 @@ public slots:
     void ripProgress(int track, int progress);
 
 private:
-    static QString millisecondsToLabel(qint64 ms);
-
     int audioTracksOffset;
     QWidget* audioMain;
     QVBoxLayout* audioLayout;
-    QVector<xAudioTrackItemWidget*> audioTracks;
+    QVector<xAudioFile*> audioTracks;
+    QVector<xEncodingTrackItemWidget*> encodingTracks;
 };
 
 #endif

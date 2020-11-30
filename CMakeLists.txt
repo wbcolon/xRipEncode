@@ -18,7 +18,7 @@ find_package(Qt5 COMPONENTS Widgets DBus REQUIRED)
 find_package(Qt5Multimedia REQUIRED)
 find_package(Qt5MultimediaWidgets REQUIRED)
 find_package(PkgConfig REQUIRED)
-
+find_package(Boost 1.70 REQUIRED)
 pkg_check_modules(LIBMUSICBRAINZ5CC libmusicbrainz5cc)
 pkg_check_modules(LIBCDIO libcdio)
 pkg_check_modules(LIBCDIO_CDDA libcdio_cdda)
@@ -29,11 +29,16 @@ set(CMAKE_REQUIRED_LIBRARIES "${LIBMUSICBRAINZ5CC_LIBRARIES} ${LIBCDIO_LIBRARIES
 add_executable(xRipEncode
         xRipEncodeConfiguration.cpp
         xRipEncodeConfigurationDialog.cpp
-        xAudioCD.cpp
+        xAudioFile.cpp
         xAudioTracksWidget.cpp
+        xAudioCD.cpp
         xMainAudioCDWidget.cpp
         xMovieFile.cpp
+        xMovieFileTrack.cpp
+        xMainMovieFileWidget.cpp
+        xEncodingTracksWidget.cpp
+        xMainEncodingWidget.cpp
         xApplication.cpp
         xRipEncode.cpp)
 
-target_link_libraries(xRipEncode KF5::Cddb Qt5::Widgets Qt5::DBus ${LIBMUSICBRAINZ5CC_LIBRARIES} ${LIBCDIO_PARANOIA_LIBRARIES} ${LIBCDIO_CDDA_LIBRARIES} ${LIBCDIO_LIBRARIES})
+target_link_libraries(xRipEncode KF5::Cddb Qt5::Widgets Qt5::DBus ${Boost_LIBRARIES} ${LIBMUSICBRAINZ5CC_LIBRARIES} ${LIBCDIO_PARANOIA_LIBRARIES} ${LIBCDIO_CDDA_LIBRARIES} ${LIBCDIO_LIBRARIES})

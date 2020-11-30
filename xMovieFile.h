@@ -12,51 +12,106 @@
  * GNU General Public License for more details.
  */
 
-#include <QObject>
+#include "xMovieFileTrack.h"
+#include "xAudioFile.h"
+
+#include <QThread>
 #include <QProcess>
 #include <QVector>
 
 #ifndef __XMOVIEFILE_H__
 #define __XMOVIEFILE_H__
 
-class xMovieFileProgress:public QProcess {
-    Q_OBJECT
-public:
-    xMovieFileProgress(QObject* parent=nullptr);
-    ~xMovieFileProgress() override = default;
+struct xMovieFileAudioStream {
+    QString codecName;
+    QString codecLongName;
+    QString profile;
+    QString sampleFormat;
+    int sampleRate;
+    int bitsPerSample;
+    int bitRate;
+    int channels;
+    QString channelLayout;
 };
 
-class xMovieFile:public QObject {
+class xMovieFile:public QThread {
     Q_OBJECT
 
 public:
-    typedef struct {
-        QString language;
-        QString type;
-        QString channels;
-        uint32_t trackNr;
-        uint32_t samples;
-        QString format;
-        double bitrate;
-    } xMovieAudioTrack;
-
-    explicit xMovieFile(const QString& file, QObject* parent=nullptr);
+    explicit xMovieFile(QObject* parent=nullptr);
     ~xMovieFile() override = default;
-
-    int getTracks();
+    /**
+     * Analyze the given file.
+     *
+     * @param file path to the movie file as string.
+     */
+    void analyze(const QString& file);
+    /**
+     * Determine the number of tracks in the movie file.
+     *
+     * @return the number of tracks.
+     */
+    [[nodiscard]] int getTracks() const;
+    /**
+     * Return the file name of the movie file.
+     *
+     * @return the absolute path as string.
+     */
+    [[nodiscard]] QString getFileName() const;
+    /**
+     * Compute the times for each track of the audio CD.
+     *
+     * @return a vector of track length in milliseconds.
+     */
+    [[nodiscard]] QVector<qint64> getTracksLengths() const;
+    /**
+     * Retrieve the extracted infos for the requested audio stream.
+     *
+     * @param audio number of the audio stream as integer (starting with 0).
+     * @return the audio stream infos as structure.
+     */
+    [[nodiscard]] xMovieFileAudioStream getAudioStreamInfo(int audio);
+    /**
+     * Queue the given to tracks
+     *
+     * @param files list of audio files containing all information.
+     * @param audio index of the audio stream (starting at 0).
+     * @param downMix down mix to stereo if true, false otherwise.
+     */
+    void queueRip(const QList<xAudioFile*>& files, int stream, bool downMix);
+    /**
+     * Rip all tracks queued.
+     */
+    void run() override;
 
 signals:
-    void audioTracks(const QVector<double>& tracks);
+    void audioFiles(QList<xAudioFile*> files);
+    void audioStreamInfos(const QStringList& infos);
+    void trackLengths(const QVector<qint64>& lengths);
+
+    void ripProgress(int track, int progress);
+    void messages(const QString& msg);
+
+
+private slots:
+    void processOutput();
 
 private:
-    void analyze();
-    static xMovieAudioTrack parseAudioStream(const QString& line);
-    static std::pair<double,double> parseChapterStream(const QString& line);
+    typedef struct {
+        xAudioFile* audioFile;
+        int audioStream;
+        int bitsPerSample;
+        bool downMix;
+    } xMovieFileQueue;
+
+    void clearTracks();
 
     QString movieFile;
-    QVector<xMovieAudioTrack> movieAudioTracks;
-    QVector<std::pair<double,double>> movieChapters;
+    QString movieFilePath;
+    QVector<xMovieFileAudioStream> movieFileAudioStreams;
+    QVector<xMovieFileTrack*> movieFileTracks;
     QProcess* process;
+    QVector<QList<xMovieFileQueue>> queue;
 };
 
 #endif

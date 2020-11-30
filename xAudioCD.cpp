@@ -155,7 +155,7 @@ xAudioCDRipper::xAudioCDRipper(cdrom_drive_t* drive, const QList<std::pair<int, 
 
 void xAudioCDRipper::run() {
     // Retrieve current temp file.
-    auto tempFileDirectory = xRipEncodeConfiguration::configuration()->getTempFileDirectory();
+    auto tempFileDirectory = xRipEncodeConfiguration::configuration()->getTempDirectory();
     // Init paranoia.
     cdrom_paranoia_t* audioDriveParanoia = paranoia_init(audioDrive);
     for (const auto& track : audioTracks) {

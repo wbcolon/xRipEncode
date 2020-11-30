@@ -13,7 +13,6 @@
  */
 #include "xApplication.h"
 #include "xRipEncodeConfigurationDialog.h"
-#include "xRipEncodeConfiguration.h"
 
 #include <QMenuBar>
 #include <QFileDialog>
@@ -22,9 +21,18 @@
 xApplication::xApplication(QWidget* parent, Qt::WindowFlags flags):
         QMainWindow(parent, flags) {
 
-    audioCDWidget = new xMainAudioCDWidget(this);
+    mainView = new QStackedWidget(this);
+    audioCDWidget = new xMainAudioCDWidget(mainView);
+    movieFileWidget = new xMainMovieFileWidget(mainView);
+    encodingWidget = new xMainEncodingWidget(mainView);
+    mainView->addWidget(audioCDWidget);
+    mainView->addWidget(movieFileWidget);
+    mainView->addWidget(encodingWidget);
+    mainView->setCurrentWidget(audioCDWidget);
+    // Connections.
+    connect(movieFileWidget, &xMainMovieFileWidget::audioFiles, encodingWidget, &xMainEncodingWidget::audioFiles);
     // Set central widget
-    setCentralWidget(audioCDWidget);
+    setCentralWidget(mainView);
     // Create Menu
     createMenus();
 }
@@ -33,7 +41,7 @@ xApplication::~xApplication() noexcept {
 }
 
 void xApplication::configure() {
-    xRipEncodeConfigurationDialog configurationDialog;
+    xRipEncodeConfigurationDialog configurationDialog(this);
     configurationDialog.show();
     configurationDialog.exec();
 }
@@ -50,5 +58,18 @@ void xApplication::createMenus() {
     fileMenu->addAction(fileMenuConfigure);
     fileMenu->addSeparator();
     fileMenu->addAction(fileMenuExitAction);
+    // Create actions for view menu.
+    auto viewMenuSelectAudioCD = new QAction("Select &Audio CD View", this);
+    auto viewMenuSelectMovieFile = new QAction("Select &Movie File View", this);
+    auto viewMenuSelectEncoding = new QAction("Select &Encoding View", this);
+    // Connect actions from view menu.
+    connect(viewMenuSelectAudioCD, &QAction::triggered, [=]() { mainView->setCurrentWidget(audioCDWidget); });
+    connect(viewMenuSelectMovieFile, &QAction::triggered, [=]() { mainView->setCurrentWidget(movieFileWidget); });
+    connect(viewMenuSelectEncoding, &QAction::triggered, [=]() { mainView->setCurrentWidget(encodingWidget); });
+    // Create view menu.
+    auto viewMenu = menuBar()->addMenu(tr("&View"));
+    viewMenu->addAction(viewMenuSelectAudioCD);
+    viewMenu->addAction(viewMenuSelectMovieFile);
+    viewMenu->addAction(viewMenuSelectEncoding);
 }
 

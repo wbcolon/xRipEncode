@@ -1,12 +1,12 @@
 /*
- * This file is part of xPlay.
+ * This file is part of xRipEncode.
  *
- * xPlay is free software: you can redistribute it and/or modify
+ * xRipEncode is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 2 of the License, or
  * (at your option) any later version.
  *
- * xPlay is distributed in the hope that it will be useful,
+ * xRipEncode is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -27,33 +27,101 @@
 xRipEncodeConfigurationDialog::xRipEncodeConfigurationDialog(QWidget* parent, Qt::WindowFlags flags):
         QDialog(parent, flags) {
     auto configurationLayout = new QGridLayout(this);
-
+    // Create file configuration box.
     auto fileBox = new QGroupBox(tr("File Configuration"), this);
     auto fileTempDirectoryLabel = new QLabel(tr("Temp Directory"), fileBox);
     fileTempDirectoryLabel->setAlignment(Qt::AlignLeft);
     fileTempDirectoryInput = new QLineEdit(fileBox);
     auto fileTempDirectoryButton = new QPushButton("...", fileBox);
-    auto fileFileNameFormatLabel = new QLabel(tr("File Format"), fileBox);
-    fileFileNameFormatLabel->setAlignment(Qt::AlignLeft);
-    fileFileNameFormatInput = new QLineEdit(fileBox);
-    fileFileNameLowerCase = new QCheckBox(tr("Lowercase"), fileBox);
-
+    auto fileBackupDirectoryLabel = new QLabel(tr("Backup Directory"), fileBox);
+    fileBackupDirectoryLabel->setAlignment(Qt::AlignLeft);
+    fileBackupDirectoryInput = new QLineEdit(fileBox);
+    auto fileBackupDirectoryButton = new QPushButton("...", fileBox);
+    auto fileEncodingDirectoryLabel = new QLabel(tr("Encoding Directory"), fileBox);
+    fileEncodingDirectoryLabel->setAlignment(Qt::AlignLeft);
+    fileEncodingDirectoryInput = new QLineEdit(fileBox);
+    auto fileEncodingDirectoryButton = new QPushButton("...", fileBox);
+    auto fileFFMpegLabel = new QLabel(tr("ffmpeg"), fileBox);
+    fileFFMpegLabel->setAlignment(Qt::AlignLeft);
+    fileFFMpegInput = new QLineEdit(fileBox);
+    auto fileFFMpegButton = new QPushButton("...", fileBox);
+    auto fileFFProbeLabel = new QLabel(tr("ffprobe"), fileBox);
+    fileFFProbeLabel->setAlignment(Qt::AlignLeft);
+    fileFFProbeInput = new QLineEdit(fileBox);
+    auto fileFFProbeButton = new QPushButton("...", fileBox);
+    auto fileMKVMergeLabel = new QLabel(tr("mkvmerge"), fileBox);
+    fileMKVMergeLabel->setAlignment(Qt::AlignLeft);
+    fileMKVMergeInput = new QLineEdit(fileBox);
+    auto fileMKVMergeButton = new QPushButton("...", fileBox);
+    auto fileMKVExtractLabel = new QLabel(tr("mkvextract"), fileBox);
+    fileMKVExtractLabel->setAlignment(Qt::AlignLeft);
+    fileMKVExtractInput = new QLineEdit(fileBox);
+    auto fileMKVExtractButton = new QPushButton("...", fileBox);
+    auto fileFlacLabel = new QLabel(tr("flac"), fileBox);
+    fileFlacLabel->setAlignment(Qt::AlignLeft);
+    fileFlacInput = new QLineEdit(fileBox);
+    auto fileFlacButton = new QPushButton("...", fileBox);
+    auto fileWavPackLabel = new QLabel(tr("wavpack"), fileBox);
+    fileWavPackLabel->setAlignment(Qt::AlignLeft);
+    fileWavPackInput = new QLineEdit(fileBox);
+    auto fileWavPackButton = new QPushButton("...", fileBox);
+    // Layout for file configuration.
     auto fileLayout = new QGridLayout();
     fileLayout->addWidget(fileTempDirectoryLabel, 0, 0, 1, 4);
     fileLayout->addWidget(fileTempDirectoryInput, 1, 0, 1, 3);
     fileLayout->addWidget(fileTempDirectoryButton, 1, 3, 1, 1);
-    fileLayout->setRowMinimumHeight(2, 50);
-    fileLayout->setRowStretch(2, 0);
-    fileLayout->addWidget(fileFileNameFormatLabel, 3, 0, 1, 4);
-    fileLayout->addWidget(fileFileNameFormatInput, 4, 0, 1, 4);
-    fileLayout->setRowMinimumHeight(5, 20);
-    fileLayout->setRowStretch(5, 0);
-    fileLayout->addWidget(fileFileNameLowerCase, 6, 0, 1, 4);
-    fileLayout->setRowMinimumHeight(7, 0);
-    fileLayout->setRowStretch(7, 2);
+    fileLayout->addWidget(fileBackupDirectoryLabel, 2, 0, 1, 4);
+    fileLayout->addWidget(fileBackupDirectoryInput, 3, 0, 1, 3);
+    fileLayout->addWidget(fileBackupDirectoryButton, 3, 3, 1, 1);
+    fileLayout->addWidget(fileEncodingDirectoryLabel, 4, 0, 1, 4);
+    fileLayout->addWidget(fileEncodingDirectoryInput, 5, 0, 1, 3);
+    fileLayout->addWidget(fileEncodingDirectoryButton, 5, 3, 1, 1);
+    fileLayout->setRowMinimumHeight(6, 50);
+    fileLayout->setRowStretch(6, 0);
+    fileLayout->addWidget(fileFFMpegLabel, 7, 0, 1, 4);
+    fileLayout->addWidget(fileFFMpegInput, 8, 0, 1, 3);
+    fileLayout->addWidget(fileFFMpegButton, 8, 3, 1, 1);
+    fileLayout->addWidget(fileFFProbeLabel, 9, 0, 1, 4);
+    fileLayout->addWidget(fileFFProbeInput, 10, 0, 1, 3);
+    fileLayout->addWidget(fileFFProbeButton, 10, 3, 1, 1);
+    fileLayout->addWidget(fileMKVMergeLabel, 11, 0, 1, 4);
+    fileLayout->addWidget(fileMKVMergeInput, 12, 0, 1, 3);
+    fileLayout->addWidget(fileMKVMergeButton, 12, 3, 1, 1);
+    fileLayout->addWidget(fileMKVExtractLabel, 13, 0, 1, 4);
+    fileLayout->addWidget(fileMKVExtractInput, 14, 0, 1, 3);
+    fileLayout->addWidget(fileMKVExtractButton, 14, 3, 1, 1);
+    fileLayout->addWidget(fileFlacLabel, 15, 0, 1, 4);
+    fileLayout->addWidget(fileFlacInput, 16, 0, 1, 3);
+    fileLayout->addWidget(fileFlacButton, 16, 3, 1, 1);
+    fileLayout->addWidget(fileWavPackLabel, 17, 0, 1, 4);
+    fileLayout->addWidget(fileWavPackInput, 18, 0, 1, 3);
+    fileLayout->addWidget(fileWavPackButton, 18, 3, 1, 1);
+    fileLayout->setRowMinimumHeight(19, 0);
+    fileLayout->setRowStretch(19, 2);
     fileBox->setLayout(fileLayout);
-
-    auto replaceBox = new QGroupBox(tr("Replace"), this);
+    // Create format configuration box.
+    auto formatBox = new QGroupBox(tr("Format Configuration"), this);
+    auto formatEncodingFormatLabel = new QLabel(tr("Encoding Format"), formatBox);
+    formatEncodingFormatLabel->setAlignment(Qt::AlignLeft);
+    formatEncodingFormatInput = new QLineEdit(formatBox);
+    auto formatFileNameFormatLabel = new QLabel(tr("File Format"), formatBox);
+    formatFileNameFormatLabel->setAlignment(Qt::AlignLeft);
+    formatFileNameFormatInput = new QLineEdit(formatBox);
+    formatFileNameLowerCase = new QCheckBox(tr("Lowercase"), formatBox);
+    // Layout for format configuration box.
+    auto formatLayout = new QGridLayout();
+    formatLayout->addWidget(formatEncodingFormatLabel, 0, 0, 1, 4);
+    formatLayout->addWidget(formatEncodingFormatInput, 1, 0, 1, 4);
+    formatLayout->addWidget(formatFileNameFormatLabel, 2, 0, 1, 4);
+    formatLayout->addWidget(formatFileNameFormatInput, 3, 0, 1, 4);
+    formatLayout->setRowMinimumHeight(4, 20);
+    formatLayout->setRowStretch(4, 0);
+    formatLayout->addWidget(formatFileNameLowerCase, 5, 0, 1, 4);
+    formatLayout->setRowMinimumHeight(6, 0);
+    formatLayout->setRowStretch(6, 2);
+    formatBox->setLayout(formatLayout);
+    // Create replace configuration box
+    auto replaceBox = new QGroupBox(tr("Replace Configuration"), this);
     auto replaceFromLabel = new QLabel(tr("From"), replaceBox);
     replaceFromLabel->setAlignment(Qt::AlignLeft);
     auto replaceToLabel = new QLabel(tr("To"), replaceBox);
@@ -64,7 +132,7 @@ xRipEncodeConfigurationDialog::xRipEncodeConfigurationDialog(QWidget* parent, Qt
     auto replaceButtons = new QDialogButtonBox(Qt::Horizontal, replaceBox);
     replaceButtons->addButton(QDialogButtonBox::Apply);
     replaceButtons->addButton(QDialogButtonBox::Discard);
-
+    // Layout for replace configuration box.
     auto replaceLayout = new QGridLayout();
     replaceLayout->addWidget(replaceFromLabel, 0, 0, 1, 2);
     replaceLayout->addWidget(replaceToLabel, 0, 2, 1, 2);
@@ -73,18 +141,28 @@ xRipEncodeConfigurationDialog::xRipEncodeConfigurationDialog(QWidget* parent, Qt
     replaceLayout->addWidget(replaceList, 2, 0, 3, 4);
     replaceLayout->addWidget(replaceButtons, 5, 0, 1, 4);
     replaceBox->setLayout(replaceLayout);
-
+    // Buttons for configuration.
     auto configurationButtons = new QDialogButtonBox(Qt::Horizontal, this);
     configurationButtons->addButton(QDialogButtonBox::Save);
     configurationButtons->addButton(QDialogButtonBox::Reset);
     configurationButtons->addButton(QDialogButtonBox::Cancel);
-
-    configurationLayout->addWidget(fileBox, 0, 0, 2, 4);
-    configurationLayout->addWidget(replaceBox, 0, 4, 2, 4);
-    configurationLayout->setRowMinimumHeight(4, 50);
-    configurationLayout->setRowStretch(4, 0);
-    configurationLayout->addWidget(configurationButtons, 5, 4, 1, 4);
-
+    // Layout for configuration
+    configurationLayout->addWidget(fileBox, 0, 0, 5, 4);
+    configurationLayout->addWidget(formatBox, 0, 4, 2, 4);
+    configurationLayout->addWidget(replaceBox, 2, 4, 3, 4);
+    configurationLayout->setRowMinimumHeight(5, 50);
+    configurationLayout->setRowStretch(5, 0);
+    configurationLayout->addWidget(configurationButtons, 6, 4, 1, 4);
+    // Connect file configuration buttons.
+    connect(fileTempDirectoryButton, &QPushButton::pressed, [=]() { openDirectory(tr("Open Temp Directory"), fileTempDirectoryInput); });
+    connect(fileEncodingDirectoryButton, &QPushButton::pressed, [=]() { openDirectory(tr("Open Encoding Directory"), fileEncodingDirectoryInput); });
+    connect(fileBackupDirectoryButton, &QPushButton::pressed, [=]() { openDirectory(tr("Open Backup Directory"), fileBackupDirectoryInput); });
+    connect(fileFFMpegButton, &QPushButton::pressed, [=]() { openFile(tr("Open ffmpeg Binary"), fileFFMpegInput); });
+    connect(fileFFProbeButton, &QPushButton::pressed, [=]() { openFile(tr("Open ffprobe Binary"), fileFFProbeInput); });
+    connect(fileMKVMergeButton, &QPushButton::pressed, [=]() { openFile(tr("Open mkvmerge Binary"), fileMKVMergeInput); });
+    connect(fileMKVExtractButton, &QPushButton::pressed, [=]() { openFile(tr("Open mkvextract Binary"), fileMKVExtractInput); });
+    connect(fileFlacButton, &QPushButton::pressed, [=]() { openFile(tr("Open flac Binary"), fileFlacInput); });
+    connect(fileWavPackButton, &QPushButton::pressed, [=]() { openFile(tr("Open wavpack Binary"), fileWavPackInput); });
     // Connect movie library.
     connect(replaceButtons->button(QDialogButtonBox::Apply), &QPushButton::pressed, this, &xRipEncodeConfigurationDialog::replaceEntryAdd);
     connect(replaceButtons->button(QDialogButtonBox::Discard), &QPushButton::pressed, this, &xRipEncodeConfigurationDialog::replaceEntryRemove);
@@ -93,104 +171,26 @@ xRipEncodeConfigurationDialog::xRipEncodeConfigurationDialog(QWidget* parent, Qt
     connect(configurationButtons->button(QDialogButtonBox::Save), &QPushButton::pressed, this, &xRipEncodeConfigurationDialog::saveSettings);
     connect(configurationButtons->button(QDialogButtonBox::Reset), &QPushButton::pressed, this, &xRipEncodeConfigurationDialog::loadSettings);
     connect(configurationButtons->button(QDialogButtonBox::Cancel), &QPushButton::pressed, this, &QDialog::reject);
-#if 0
-    auto musicLibraryBox = new QGroupBox(tr("Music Library Configuration"), this);
-    auto movieLibraryBox = new QGroupBox(tr("Movie Library Configuration"), this);
-    auto streamingSitesBox = new QGroupBox(tr("Streaming Sites Configuration"), this);
-
-    // Setup movie library setup, with tags, directories and extensions.
-    auto movieLibraryLayout = new QGridLayout(movieLibraryBox);
-    auto movieLibraryTagLabel = new QLabel(tr("Tag"), movieLibraryBox);
-    movieLibraryTagWidget = new QLineEdit(movieLibraryBox);
-    auto movieLibraryDirectoryLabel = new QLabel(tr("Directory"), movieLibraryBox);
-    movieLibraryDirectoryWidget = new QLineEdit(movieLibraryBox);
-    auto movieLibraryDirectoryOpenButton = new QPushButton(tr("..."), movieLibraryBox);
-    movieLibraryListWidget = new QListWidget(movieLibraryBox);
-    movieLibraryListWidget->setSortingEnabled(true);
-    auto movieLibraryExtensionsLabel = new QLabel(tr("Extensions"), movieLibraryBox);
-    movieLibraryExtensionsWidget = new QLineEdit(movieLibraryBox);
-    movieLibraryLayout->addWidget(movieLibraryTagLabel, 0, 0, 1, 5);
-    movieLibraryLayout->addWidget(movieLibraryTagWidget, 1, 0, 1, 5);
-    movieLibraryLayout->addWidget(movieLibraryDirectoryLabel, 2, 0, 1, 5);
-    movieLibraryLayout->addWidget(movieLibraryDirectoryWidget, 3, 0, 1, 4);
-    movieLibraryLayout->addWidget(movieLibraryDirectoryOpenButton, 3, 4);
-    movieLibraryLayout->addWidget(movieLibraryListWidget, 4, 0, 3, 5);
-    movieLibraryLayout->addWidget(movieLibraryButtons, 7, 0, 1, 5);
-    movieLibraryLayout->addWidget(movieLibraryExtensionsLabel, 8, 0, 1, 5);
-    movieLibraryLayout->addWidget(movieLibraryExtensionsWidget, 9, 0, 1, 5);
-    // Setup music library with directory and extensions.
-    auto musicLibraryLayout = new QGridLayout(musicLibraryBox);
-    auto musicLibraryDirectoryLabel = new QLabel(tr("Directory"), musicLibraryBox);
-    musicLibraryDirectoryWidget = new QLineEdit(musicLibraryBox);
-    auto musicLibraryDirectoryOpenButton = new QPushButton(tr("..."), musicLibraryBox);
-    auto musicLibraryExtensionsLabel = new QLabel(tr("Extensions"), musicLibraryBox);
-    musicLibraryExtensionsWidget = new QLineEdit(musicLibraryBox);
-    musicLibraryLayout->addWidget(musicLibraryDirectoryLabel, 0, 0, 1, 5);
-    musicLibraryLayout->addWidget(musicLibraryDirectoryWidget, 1, 0, 1, 4);
-    musicLibraryLayout->addWidget(musicLibraryDirectoryOpenButton, 1, 4);
-    musicLibraryLayout->addWidget(musicLibraryExtensionsLabel, 2, 0, 1, 5);
-    musicLibraryLayout->addWidget(musicLibraryExtensionsWidget, 3, 0, 1, 5);
-    // Setup rotel amp with network address and port.
-    auto rotelLayout = new QGridLayout(rotelBox);
-    auto rotelNetworkAddressLabel = new QLabel(tr("Network Address"), rotelBox);
-    auto rotelNetworkPortLabel = new QLabel(tr("Port"), rotelBox);
-    rotelNetworkAddressWidget = new QLineEdit(rotelBox);
-    rotelNetworkPortWidget = new QSpinBox(rotelBox);
-    rotelNetworkPortWidget->setRange(0, 10000);
-    rotelLayout->addWidget(rotelNetworkAddressLabel, 0, 0, 1, 4);
-    rotelLayout->addWidget(rotelNetworkAddressWidget, 1, 0, 1, 4);
-    rotelLayout->addWidget(rotelNetworkPortLabel, 0, 4);
-    rotelLayout->addWidget(rotelNetworkPortWidget, 1, 4);
-    // Setup streaming sites with URL and short name.
-    auto streamingSitesLayout = new QGridLayout(streamingSitesBox);
-    auto streamingNameLabel = new QLabel(tr("Name"), streamingSitesBox);
-    streamingNameWidget = new QLineEdit(streamingSitesBox);
-    auto streamingUrlLabel = new QLabel(tr("Url"), streamingSitesBox);
-    streamingUrlWidget = new QLineEdit(streamingSitesBox);
-    auto streamingSitesButtons = new QDialogButtonBox(Qt::Horizontal, streamingSitesBox);
-    streamingSitesButtons->addButton(QDialogButtonBox::Apply);
-    streamingSitesButtons->addButton(QDialogButtonBox::Discard);
-    auto streamingSitesDefaultButton = streamingSitesButtons->addButton(tr("Default"), QDialogButtonBox::ResetRole);
-    streamingSitesListWidget = new QListWidget(movieLibraryBox);
-    streamingSitesListWidget->setSortingEnabled(true);
-    streamingSitesLayout->addWidget(streamingNameLabel, 0, 0, 1, 2);
-    streamingSitesLayout->addWidget(streamingNameWidget, 1, 0, 1, 2);
-    streamingSitesLayout->addWidget(streamingUrlLabel, 1, 2, 1, 3);
-    streamingSitesLayout->addWidget(streamingUrlWidget, 1, 2, 1, 3);
-    streamingSitesLayout->addWidget(streamingSitesListWidget, 2, 0, 3, 5);
-    streamingSitesLayout->addWidget(streamingSitesButtons, 5, 0, 1, 5);
-    // Configuration layout.
-    configurationLayout->addWidget(musicLibraryBox, 0, 0, 2, 4);
-    configurationLayout->addWidget(streamingSitesBox, 2, 0, 3, 4);
-    configurationLayout->addWidget(rotelBox, 5, 0, 1, 4);
-    configurationLayout->addWidget(movieLibraryBox, 0, 4, 6, 4);
-    configurationLayout->setRowMinimumHeight(6, 50);
-    configurationLayout->setRowStretch(6, 0);
-    configurationLayout->addWidget(configurationButtons, 7, 4, 1, 4);
-    // Connect dialog buttons.
-    connect(musicLibraryDirectoryOpenButton, &QPushButton::pressed, this, &xRipEncodeConfigurationDialog::openMusicLibraryDirectory);
-    connect(movieLibraryDirectoryOpenButton, &QPushButton::pressed, this, &xRipEncodeConfigurationDialog::openMovieLibraryDirectory);
-    // Connect movie library.
-    connect(movieLibraryButtons->button(QDialogButtonBox::Apply), &QPushButton::pressed, this, &xRipEncodeConfigurationDialog::movieLibraryAdd);
-    connect(movieLibraryButtons->button(QDialogButtonBox::Discard), &QPushButton::pressed, this, &xRipEncodeConfigurationDialog::movieLibraryRemove);
-    connect(movieLibraryListWidget, &QListWidget::currentItemChanged, this, &xRipEncodeConfigurationDialog::selectMovieLibrary);
-    // Connect streaming sites.
-    connect(streamingSitesButtons->button(QDialogButtonBox::Apply), &QPushButton::pressed, this, &xRipEncodeConfigurationDialog::streamingSiteAdd);
-    connect(streamingSitesButtons->button(QDialogButtonBox::Discard), &QPushButton::pressed, this, &xRipEncodeConfigurationDialog::streamingSiteRemove);
-    connect(streamingSitesDefaultButton, &QPushButton::pressed, this, &xRipEncodeConfigurationDialog::streamingSiteDefault);
-    connect(streamingSitesListWidget, &QListWidget::currentItemChanged, this, &xRipEncodeConfigurationDialog::selectStreamingSite);
-#endif
     // Load and resize.
     loadSettings();
-    setMinimumWidth(static_cast<int>(sizeHint().height()*1.7));
+    setMinimumWidth(static_cast<int>(sizeHint().height()*1.6));
     setMinimumHeight(sizeHint().height());
 }
 
 void xRipEncodeConfigurationDialog::loadSettings() {
     // Load settings.
-    fileTempDirectoryInput->setText(xRipEncodeConfiguration::configuration()->getTempFileDirectory());
-    fileFileNameFormatInput->setText(xRipEncodeConfiguration::configuration()->getFileNameFormat());
-    fileFileNameLowerCase->setChecked(xRipEncodeConfiguration::configuration()->getFileNameLowerCase());
+    fileTempDirectoryInput->setText(xRipEncodeConfiguration::configuration()->getTempDirectory());
+    fileBackupDirectoryInput->setText(xRipEncodeConfiguration::configuration()->getBackupDirectory());
+    fileEncodingDirectoryInput->setText(xRipEncodeConfiguration::configuration()->getEncodingDirectory());
+    fileFFMpegInput->setText(xRipEncodeConfiguration::configuration()->getFFMpeg());
+    fileFFProbeInput->setText(xRipEncodeConfiguration::configuration()->getFFProbe());
+    fileMKVMergeInput->setText(xRipEncodeConfiguration::configuration()->getMKVMerge());
+    fileMKVExtractInput->setText(xRipEncodeConfiguration::configuration()->getMKVExtract());
+    fileFlacInput->setText(xRipEncodeConfiguration::configuration()->getFlac());
+    fileWavPackInput->setText(xRipEncodeConfiguration::configuration()->getWavPack());
+    formatEncodingFormatInput->setText(xRipEncodeConfiguration::configuration()->getEncodingFormat());
+    formatFileNameFormatInput->setText(xRipEncodeConfiguration::configuration()->getFileNameFormat());
+    formatFileNameLowerCase->setChecked(xRipEncodeConfiguration::configuration()->getFileNameLowerCase());
     replaceList->clear();
     auto replace = xRipEncodeConfiguration::configuration()->getFileNameReplace();
     for (const auto& replaceEntry : replace) {
@@ -200,9 +200,18 @@ void xRipEncodeConfigurationDialog::loadSettings() {
 
 void xRipEncodeConfigurationDialog::saveSettings() {
     // Read setting entries.
-    xRipEncodeConfiguration::configuration()->setTempFileDirectory(fileTempDirectoryInput->text());
-    xRipEncodeConfiguration::configuration()->setFileNameFormat(fileFileNameFormatInput->text());
-    xRipEncodeConfiguration::configuration()->setFileNameLowerCase(fileFileNameLowerCase->isChecked());
+    xRipEncodeConfiguration::configuration()->setTempDirectory(fileTempDirectoryInput->text());
+    xRipEncodeConfiguration::configuration()->setBackupDirectory(fileBackupDirectoryInput->text());
+    xRipEncodeConfiguration::configuration()->setEncodingDirectory(fileEncodingDirectoryInput->text());
+    xRipEncodeConfiguration::configuration()->setFFMpeg(fileFFMpegInput->text());
+    xRipEncodeConfiguration::configuration()->setFFProbe(fileFFProbeInput->text());
+    xRipEncodeConfiguration::configuration()->setMKVMerge(fileMKVMergeInput->text());
+    xRipEncodeConfiguration::configuration()->setMKVExtract(fileMKVExtractInput->text());
+    xRipEncodeConfiguration::configuration()->setFlac(fileFlacInput->text());
+    xRipEncodeConfiguration::configuration()->setWavPack(fileWavPackInput->text());
+    xRipEncodeConfiguration::configuration()->setEncodingFormat(formatEncodingFormatInput->text());
+    xRipEncodeConfiguration::configuration()->setFileNameFormat(formatFileNameFormatInput->text());
+    xRipEncodeConfiguration::configuration()->setFileNameLowerCase(formatFileNameLowerCase->isChecked());
     QList<std::pair<QString,QString>> replace;
     for (auto index = 0; index < replaceList->count(); ++index) {
         replace.push_back(xRipEncodeConfigurationDialog::splitReplaceEntries(replaceList->item(index)->text()));
@@ -235,6 +244,22 @@ void xRipEncodeConfigurationDialog::replaceEntryRemove() {
     auto currentIndex = replaceList->currentRow();
     if ((currentIndex >= 0) && (currentIndex < replaceList->count())) {
         replaceList->takeItem(currentIndex);
+    }
+}
+
+void xRipEncodeConfigurationDialog::openDirectory(const QString& title, QLineEdit* lineEdit) {
+    QString newDirectory =
+            QFileDialog::getExistingDirectory(this, title, lineEdit->text(),
+                                              QFileDialog::ShowDirsOnly|QFileDialog::DontResolveSymlinks);
+    if (!newDirectory.isEmpty()) {
+        lineEdit->setText(newDirectory);
+    }
+}
+
+void xRipEncodeConfigurationDialog::openFile(const QString& title, QLineEdit* lineEdit) {
+    QString newFileName = QFileDialog::getOpenFileName(this, title, QDir::cleanPath(lineEdit->text()));
+    if (!newFileName.isEmpty()) {
+        lineEdit->setText(newFileName);
     }
 }
 

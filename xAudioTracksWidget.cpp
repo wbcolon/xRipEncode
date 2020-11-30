@@ -97,9 +97,11 @@ void xAudioTrackItemWidget::trackInput(bool autofill) {
 }
 
 void xAudioTrackItemWidget::ripProgress(int progress) {
-    trackProgress->setFormat(trackName->text()+" - %p%");
-    trackStacked->setCurrentWidget(trackProgress);
-    trackProgress->setValue(progress);
+    if (isSelected()) {
+        trackProgress->setFormat(trackName->text()+" - %p%");
+        trackStacked->setCurrentWidget(trackProgress);
+        trackProgress->setValue(progress);
+    }
 }
 
 xAudioTracksWidget::xAudioTracksWidget(QWidget* parent):

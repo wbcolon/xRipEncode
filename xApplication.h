@@ -15,6 +15,8 @@
 #define __XAPPLICATION_H__
 
 #include "xMainAudioCDWidget.h"
+#include "xMainMovieFileWidget.h"
+#include "xMainEncodingWidget.h"
 #include <QSettings>
 #include <QStackedWidget>
 #include <QMainWindow>
@@ -37,6 +39,9 @@ private:
     void createMenus();
 
     xMainAudioCDWidget* audioCDWidget;
+    xMainMovieFileWidget* movieFileWidget;
+    xMainEncodingWidget* encodingWidget;
+    QStackedWidget* mainView;
 };
 
 #endif
