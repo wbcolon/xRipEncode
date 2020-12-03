@@ -79,7 +79,9 @@ xMainAudioCDWidget::xMainAudioCDWidget(QWidget *parent, Qt::WindowFlags flags):
     auto audioTracksBox = new QGroupBox(tr("Audio Tracks"), this);
     audioTracksSelectButton = new QPushButton(tr("Select All"), audioTracksBox);
     audioTracksRipButton = new QPushButton(tr("Rip Selected"), audioTracksBox);
+    audioTracksRipButton->setEnabled(false);
     audioTracksRipCancelButton = new QPushButton(tr("Cancel Rip"), audioTracksBox);
+    audioTracksRipCancelButton->setEnabled(false);
     audioTracks = new xAudioTracksWidget(audioTracksBox);
     auto audioTracksLayout = new QGridLayout();
     audioTracksLayout->addWidget(audioTracksSelectButton, 0, 0, 1, 2);
@@ -103,7 +105,7 @@ xMainAudioCDWidget::xMainAudioCDWidget(QWidget *parent, Qt::WindowFlags flags):
     mainLayout->addWidget(audioCDBox, 0, 0, 7, 4);
     mainLayout->addWidget(consoleBox, 7, 0, 3, 4);
     mainLayout->addWidget(audioTracksBox, 0, 4, 10, 4);
-    // Connect Buttons
+    // Connect Buttons.
     connect(audioCDDetectButton, &QPushButton::pressed, this, &xMainAudioCDWidget::detect);
     connect(audioCDEjectButton, &QPushButton::pressed, this, &xMainAudioCDWidget::eject);
     connect(audioCDAutofillButton, &QPushButton::pressed, this, &xMainAudioCDWidget::autofill);
@@ -112,6 +114,9 @@ xMainAudioCDWidget::xMainAudioCDWidget(QWidget *parent, Qt::WindowFlags flags):
     connect(audioTracksRipButton, &QPushButton::pressed, this, &xMainAudioCDWidget::rip);
     connect(audioTracksRipCancelButton, &QPushButton::pressed, this, &xMainAudioCDWidget::ripCancel);
     connect(audioCDLookupResults, SIGNAL(currentIndexChanged(int)), this, SLOT(musicBrainzUpdate(int)));
+    // Connect LineEdits for Artist and Album.
+    connect(audioCDArtistName, &QLineEdit::textChanged, this, &xMainAudioCDWidget::artistOrAlbumChanged);
+    connect(audioCDAlbumName, &QLineEdit::textChanged, this, &xMainAudioCDWidget::artistOrAlbumChanged);
     // Update names if checkbox "Replace" or "Lowercase" is clicked.
     connect(audioCDLowerCase, &QCheckBox::clicked, [=](bool) { musicBrainzUpdate(audioCDLookupResults->currentIndex()); });
     connect(audioCDReplace, &QCheckBox::clicked, [=](bool) { musicBrainzUpdate(audioCDLookupResults->currentIndex()); });
@@ -123,6 +128,7 @@ xMainAudioCDWidget::xMainAudioCDWidget(QWidget *parent, Qt::WindowFlags flags):
     connect(audioCD, &xAudioCD::ripMessages, this, &xMainAudioCDWidget::ripMessage);
     connect(audioCD, &xAudioCD::ripError, this, &xMainAudioCDWidget::ripError);
     connect(audioCD, &xAudioCD::ripFinished, this, &xMainAudioCDWidget::ripFinished);
+    connect(audioCD, &xAudioCD::audioFiles, this, &xMainAudioCDWidget::audioFiles);
 }
 
 void xMainAudioCDWidget::musicBrainz() {
@@ -159,6 +165,15 @@ void xMainAudioCDWidget::musicBrainzUpdate(int index) {
     }
 }
 
+void xMainAudioCDWidget::artistOrAlbumChanged(const QString& text) {
+    Q_UNUSED(text)
+    if (audioCDArtistName->text().isEmpty() || audioCDAlbumName->text().isEmpty()) {
+        audioTracksRipButton->setEnabled(false);
+    } else {
+        audioTracksRipButton->setEnabled(true);
+    }
+}
+
 void xMainAudioCDWidget::autofill() {
     audioCDArtistName->setText(tr("artist"));
     audioCDAlbumName->setText(tr("album"));
@@ -180,17 +195,21 @@ void xMainAudioCDWidget::eject() {
     audioTracks->clear();
     audioCDArtistName->clear();
     audioCDAlbumName->clear();
+    audioCDLookupResults->clear();
     audioCD->eject();
 }
 
 void xMainAudioCDWidget::rip() {
-    // Scan.
-    auto trackNames = getTrackNames();
-    qDebug() << "xMainAudioCDWidget: rip: " << trackNames;
+    // Retrieve selected tracks.
+    auto tracks = getTracks();
+    if (tracks.isEmpty()) {
+        consoleText->append("No tracks selected.");
+        return;
+    }
     audioCDAlbumName->setEnabled(false);
     audioCDArtistName->setEnabled(false);
     audioCDDetectButton->setEnabled(false);
-    audioCDEjectButton->setEnabled(true);
+    audioCDEjectButton->setEnabled(false);
     audioCDAutofillButton->setEnabled(false);
     audioCDLookupButton->setEnabled(false);
     audioCDLookupResults->setEnabled(false);
@@ -201,7 +220,7 @@ void xMainAudioCDWidget::rip() {
     audioTracksSelectButton->setEnabled(false);
     audioTracksRipButton->setEnabled(false);
     audioTracksRipCancelButton->setEnabled(true);
-    audioCD->rip(trackNames);
+    audioCD->rip(tracks);
 }
 
 void xMainAudioCDWidget::ripCancel() {
@@ -244,22 +263,26 @@ void xMainAudioCDWidget::ripFinished() {
     audioTracksRipCancelButton->setEnabled(false);
 }
 
-QList<std::pair<int,QString>> xMainAudioCDWidget::getTrackNames() {
-    QList<std::pair<int,QString>> trackNames;
+QList<xAudioFile*> xMainAudioCDWidget::getTracks() {
+    QList<xAudioFile*> tracks;
     auto selectedTracks = audioTracks->isSelected();
     auto artistName = audioCDArtistName->text();
     auto albumName = audioCDAlbumName->text();
+    auto tagName = xRipEncodeConfiguration::configuration()->getTags().at(0);
     auto fileFormat = xRipEncodeConfiguration::configuration()->getFileNameFormat();
+    auto tempDirectory = xRipEncodeConfiguration::configuration()->getTempDirectory();
     fileFormat.replace("(artist)", artistName);
     fileFormat.replace("(album)", albumName);
+    fileFormat.replace("(tag)", tagName);
     for (const auto& track : selectedTracks) {
         auto trackFileFormat = fileFormat;
         trackFileFormat.replace("(tracknr)", std::get<1>(track));
         trackFileFormat.replace("(trackname)", std::get<2>(track));
         trackFileFormat.append(".wav");
-        trackNames.push_back(std::make_pair(std::get<0>(track), trackFileFormat));
+        tracks.push_back(new xAudioFile(trackFileFormat, std::get<0>(track), artistName, albumName,
+                                        std::get<1>(track), std::get<2>(track), tagName, 0));
     }
-    return trackNames;
+    return tracks;
 }
 
 QString xMainAudioCDWidget::updateString(const QString& text) {

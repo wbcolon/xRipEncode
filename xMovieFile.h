@@ -85,26 +85,57 @@ public:
     void run() override;
 
 signals:
-    void audioFiles(QList<xAudioFile*> files);
+    /**
+     * Signal emitted after the movie file chapters have been ripped.
+     *
+     * @param files a list of audio file objects.
+     */
+    void audioFiles(const QList<xAudioFile*>& files);
+    /**
+     * Signal emitted after the movie file has been analyzed.
+     *
+     * @param infos a list of strings of stream infos.
+     */
     void audioStreamInfos(const QStringList& infos);
+    /**
+     * Signal emitted after the movie file has been analyzed.
+     *
+     * @param lengths a vector of chapter length in milliseconds.
+     */
     void trackLengths(const QVector<qint64>& lengths);
-
+    /**
+     * Signal the rip progress for movie file chapters.
+     *
+     * @param track the track currently ripped.
+     * @param progress the rip progress for the current track.
+     */
     void ripProgress(int track, int progress);
+    /**
+     * Signal the output of the rip process.
+     *
+     * @param msg the current output as string.
+     */
     void messages(const QString& msg);
 
 
 private slots:
+    /**
+     * Process the output of the rip process.
+     */
     void processOutput();
 
 private:
+    /**
+     * Clear all tracks for the movie file.
+     */
+    void clearTracks();
+
     typedef struct {
         xAudioFile* audioFile;
         int audioStream;
         int bitsPerSample;
         bool downMix;
     } xMovieFileQueue;
-
-    void clearTracks();
 
     QString movieFile;
     QString movieFilePath;

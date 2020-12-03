@@ -16,6 +16,7 @@
 #define __XMAINAUDIOCDWIDGET_H__
 
 #include "xAudioCD.h"
+#include "xAudioFile.h"
 #include "xAudioTracksWidget.h"
 #include <QPushButton>
 #include <QComboBox>
@@ -33,6 +34,7 @@ public:
     ~xMainAudioCDWidget() = default;
 
 private slots:
+    void artistOrAlbumChanged(const QString& text);
     void detect();
     void eject();
     void musicBrainz();
@@ -45,8 +47,11 @@ private slots:
     void ripError(int track, const QString& error, bool abort);
     void ripFinished();
 
+signals:
+    void audioFiles(const QList<xAudioFile*>& tracks);
+
 private:
-    QList<std::pair<int,QString>> getTrackNames();
+    QList<xAudioFile*> getTracks();
     QString updateString(const QString& text);
 
     QLineEdit* audioCDArtistName;

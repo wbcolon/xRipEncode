@@ -33,9 +33,10 @@ public:
     ~xMainMovieFileWidget() override = default;
 
 signals:
-    void audioFiles(QList<xAudioFile*> files);
+    void audioFiles(const QList<xAudioFile*>& files);
 
 private slots:
+    void artistOrAlbumChanged(const QString& text);
     void openFile();
     void autofill();
     void rip();
@@ -50,7 +51,6 @@ private slots:
     void messages(const QString& msg);
 
 private:
-    QList<std::pair<int,QString>> getTrackNames(const QString& tag);
     QList<xAudioFile*> getAudioFiles(const QString& tag, int tagId);
 
     QLineEdit* movieFileArtistName;
@@ -58,6 +58,7 @@ private:
     QLineEdit* movieFileName;
     QPushButton* movieFileAutofillButton;
     QPushButton* movieFileAnalyzeButton;
+    QPushButton* movieFileDialogButton;
     QSpinBox* movieFileTrackOffset;
     QCheckBox* movieFileAudioDownMix;
     QCheckBox* movieFileAudioStreamTag;

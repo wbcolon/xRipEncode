@@ -31,7 +31,7 @@ xMainMovieFileWidget::xMainMovieFileWidget(QWidget *parent, Qt::WindowFlags flag
     movieFileArtistName = new QLineEdit(movieFileBox);
     movieFileAlbumName = new QLineEdit(movieFileBox);
     movieFileName = new QLineEdit(movieFileBox);
-    auto movieFileDialogButton = new QPushButton(tr("..."), movieFileBox);
+    movieFileDialogButton = new QPushButton(tr("..."), movieFileBox);
     auto movieFileLayout = new QGridLayout();
     movieFileLayout->addWidget(new QLabel(tr("Artist"), movieFileBox), 0, 0, 1, 1);
     movieFileLayout->addWidget(movieFileArtistName, 1, 0, 1, 6);
@@ -77,7 +77,9 @@ xMainMovieFileWidget::xMainMovieFileWidget(QWidget *parent, Qt::WindowFlags flag
     auto movieAudioTracksBox = new QGroupBox(tr("Audio Tracks"), this);
     movieAudioTracksSelectButton = new QPushButton(tr("Select All"), movieAudioTracksBox);
     movieAudioTracksRipButton = new QPushButton(tr("Rip Selected"), movieAudioTracksBox);
+    movieAudioTracksRipButton->setEnabled(false);
     movieAudioTracksRipCancelButton = new QPushButton(tr("Cancel Rip"), movieAudioTracksBox);
+    movieAudioTracksRipCancelButton->setEnabled(false);
     movieAudioTracks = new xAudioTracksWidget(movieAudioTracksBox);
     auto movieAudioTracksLayout = new QGridLayout();
     movieAudioTracksLayout->addWidget(movieAudioTracksSelectButton, 0, 0, 1, 2);
@@ -117,10 +119,22 @@ xMainMovieFileWidget::xMainMovieFileWidget(QWidget *parent, Qt::WindowFlags flag
     connect(movieAudioTracksSelectButton, &QPushButton::pressed, movieAudioTracks, &xAudioTracksWidget::selectAll);
     connect(movieAudioTracksRipButton, &QPushButton::pressed, this, &xMainMovieFileWidget::rip);
     connect(movieAudioTracksRipCancelButton, &QPushButton::pressed, this, &xMainMovieFileWidget::ripCancel);
+    // Connect album and artist LineEdit.
+    connect(movieFileArtistName, &QLineEdit::textChanged, this, &xMainMovieFileWidget::artistOrAlbumChanged);
+    connect(movieFileAlbumName, &QLineEdit::textChanged, this, &xMainMovieFileWidget::artistOrAlbumChanged);
     // Connect audio stream infos.
     connect(movieFileAudioStreamInfos, &QListWidget::itemSelectionChanged, this, &xMainMovieFileWidget::audioStreamInfoSelection);
     // Update track offset.
     connect(movieFileTrackOffset, SIGNAL(valueChanged(int)), movieAudioTracks, SLOT(setTrackOffset(int)));
+}
+
+void xMainMovieFileWidget::artistOrAlbumChanged(const QString& text) {
+    Q_UNUSED(text)
+    if (movieFileArtistName->text().isEmpty() || movieFileAlbumName->text().isEmpty()) {
+        movieAudioTracksRipButton->setEnabled(false);
+    } else {
+        movieAudioTracksRipButton->setEnabled(movieFileAudioStreamInfos->selectedItems().count() != 0);
+    }
 }
 
 void xMainMovieFileWidget::autofill() {
@@ -151,6 +165,7 @@ void xMainMovieFileWidget::audioStreamInfoSelection() {
     } else {
         movieFileAudioStreamTag->setEnabled(true);
     }
+    movieAudioTracksRipButton->setEnabled(items.count() != 0);
     for (const auto& item : items) {
         auto streamInfo = movieFile->getAudioStreamInfo(movieFileAudioStreamInfos->row(item));
         if (streamInfo.channels > 2) {
@@ -196,6 +211,17 @@ void xMainMovieFileWidget::rip() {
             }
         }
     }
+    // Disable elements.
+    movieFileArtistName->setEnabled(false);
+    movieFileAlbumName->setEnabled(false);
+    movieFileName->setEnabled(false);
+    movieFileDialogButton->setEnabled(false);
+    movieFileAutofillButton->setEnabled(false);
+    movieFileAnalyzeButton->setEnabled(false);
+    movieFileAudioStreamInfos->setEnabled(false);
+    movieAudioTracksSelectButton->setEnabled(false);
+    movieAudioTracksRipButton->setEnabled(false);
+    movieAudioTracksRipCancelButton->setEnabled(true);
     // Start rip thread.
     movieFile->start();
 }
@@ -223,34 +249,22 @@ void xMainMovieFileWidget::ripError(int track, const QString& error, bool abort)
 }
 
 void xMainMovieFileWidget::ripFinished() {
-    qDebug() << "RIP_FINISHED";
+    // Enable elements.
+    movieFileArtistName->setEnabled(true);
+    movieFileAlbumName->setEnabled(true);
+    movieFileName->setEnabled(true);
+    movieFileDialogButton->setEnabled(true);
+    movieFileAutofillButton->setEnabled(true);
+    movieFileAnalyzeButton->setEnabled(true);
+    movieFileAudioStreamInfos->setEnabled(true);
+    movieAudioTracksSelectButton->setEnabled(true);
+    movieAudioTracksRipButton->setEnabled(true);
+    movieAudioTracksRipCancelButton->setEnabled(false);
 }
 
 void xMainMovieFileWidget::messages(const QString& msg) {
     consoleText->append(msg);
 }
-
-QList<std::pair<int,QString>> xMainMovieFileWidget::getTrackNames(const QString& tag) {
-    QList<std::pair<int,QString>> trackNames;
-    auto selectedTracks = movieAudioTracks->isSelected();
-    auto artistName = movieFileArtistName->text();
-    auto albumName = movieFileAlbumName->text();
-    if (!tag.isEmpty()) {
-        albumName+= " "+tag;
-    }
-    auto fileFormat = xRipEncodeConfiguration::configuration()->getFileNameFormat();
-    fileFormat.replace("(artist)", artistName);
-    fileFormat.replace("(album)", albumName);
-    for (const auto& track : selectedTracks) {
-        auto trackFileFormat = fileFormat;
-        trackFileFormat.replace("(tracknr)", std::get<1>(track));
-        trackFileFormat.replace("(trackname)", std::get<2>(track));
-        trackFileFormat.append(".wav");
-        trackNames.push_back(std::make_pair(std::get<0>(track), trackFileFormat));
-    }
-    return trackNames;
-}
-
 
 QList<xAudioFile*> xMainMovieFileWidget::getAudioFiles(const QString& tag, int tagId) {
     QList<xAudioFile*> files;

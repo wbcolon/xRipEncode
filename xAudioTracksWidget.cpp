@@ -168,6 +168,7 @@ void xAudioTracksWidget::setTracks(int tracks) {
         audioLayout->addWidget(trackItemWidget);
         audioTracks[track] = trackItemWidget;
     }
+    audioLayout->addStretch(10);
     setWidget(audioMain);
 }
 

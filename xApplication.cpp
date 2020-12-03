@@ -16,7 +16,7 @@
 
 #include <QMenuBar>
 #include <QFileDialog>
-#include <QInputDialog>
+#include <QMetaType>
 
 xApplication::xApplication(QWidget* parent, Qt::WindowFlags flags):
         QMainWindow(parent, flags) {
@@ -29,8 +29,13 @@ xApplication::xApplication(QWidget* parent, Qt::WindowFlags flags):
     mainView->addWidget(movieFileWidget);
     mainView->addWidget(encodingWidget);
     mainView->setCurrentWidget(audioCDWidget);
+    // Register Type
+    qRegisterMetaType<xAudioFile>();
+    qRegisterMetaType<xAudioFile*>();
+    qRegisterMetaType<QList<xAudioFile*>>();
     // Connections.
     connect(movieFileWidget, &xMainMovieFileWidget::audioFiles, encodingWidget, &xMainEncodingWidget::audioFiles);
+    connect(audioCDWidget, &xMainAudioCDWidget::audioFiles, encodingWidget, &xMainEncodingWidget::audioFiles);
     // Set central widget
     setCentralWidget(mainView);
     // Create Menu
