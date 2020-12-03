@@ -54,9 +54,9 @@ xEncodingTrackItemWidget::xEncodingTrackItemWidget(xAudioFile* file, QWidget* pa
     trackInfoLayout->setColumnStretch(8, 2);
     trackInfo->setLayout(trackInfoLayout);
     // Setup encoded (output) file name view.
-    encodedFileName = new QLabel(mainStacked);
+    encodedFileName = new QLineEdit(mainStacked);
     encodedFileName->setAlignment(Qt::AlignLeft);
-    encodedFileName->setWordWrap(true);
+    encodedFileName->setReadOnly(true);
     // Setup progress bar for encoding.
     encodedProgress = new QProgressBar(mainStacked);
     encodedProgress->setRange(0, 100);
@@ -129,12 +129,35 @@ QString xEncodingTrackItemWidget::getTrackName() const {
     return trackName->text();
 }
 
+QString xEncodingTrackItemWidget::getEncodedFileName() const {
+    return encodedFileName->text();
+}
+
+xAudioFile* xEncodingTrackItemWidget::getAudioFile() const {
+    return audioFile;
+}
+
 void xEncodingTrackItemWidget::setSelected(bool select) {
     trackSelect->setChecked(select);
 }
 
 bool xEncodingTrackItemWidget::isSelected() const {
     return trackSelect->isChecked();
+}
+
+void xEncodingTrackItemWidget::setEncodedFormat(const QString& format) {
+   encodedFormat = format;
+   updateEncodedFileName();
+}
+
+void xEncodingTrackItemWidget::updateEncodedFileName() {
+    auto encodedName = encodedFormat;
+    encodedName.replace("(artist)", getArtist());
+    encodedName.replace("(album)", getAlbum());
+    encodedName.replace("(tracknr)", getTrackNr());
+    encodedName.replace("(trackname)", getTrackName());
+    encodedName.replace("(tag)", getTag());
+    encodedFileName->setText(encodedName);
 }
 
 void xEncodingTrackItemWidget::viewOutput(bool autofill) {
@@ -144,7 +167,7 @@ void xEncodingTrackItemWidget::viewOutput(bool autofill) {
         albumName->setText(tr("album"));
         tagName->setText(tr(""));
         trackName->setText(tr("track"));
-        encodedFileName->setText("artist/album/nr track");
+        updateEncodedFileName();
     }
 }
 
@@ -174,21 +197,22 @@ void xEncodingTrackItemWidget::toggleViews() {
 
 xEncodingTracksWidget::xEncodingTracksWidget(QWidget* parent):
         QScrollArea(parent),
+        audioTracksOffset(0),
         audioMain(nullptr),
         audioLayout(nullptr) {
     setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     setWidgetResizable(true);
-    setTracks(20);
-    autofill();
-    encodingTracks[1]->setSelected(true);
-    encodingTracks[2]->setSelected(true);
-    ripProgress(2, 10);
-    ripProgress(3, 30);
 }
 
-void xEncodingTracksWidget::autofill() {
+void xEncodingTracksWidget::viewOutput(bool autofill) {
     for (auto& audioTrack : encodingTracks) {
-        audioTrack->viewOutput(true);
+        audioTrack->viewOutput(autofill);
+    }
+}
+
+void xEncodingTracksWidget::viewInput() {
+    for (auto& audioTrack : encodingTracks) {
+        audioTrack->viewInput();
     }
 }
 
@@ -200,15 +224,7 @@ void xEncodingTracksWidget::setTrackOffset(int offset) {
     }
 }
 
-void xEncodingTracksWidget::setTracks(const QVector<xAudioFile*>& files) {
-    if (files.count() == encodingTracks.count()) {
-        for (int track = 0; track < encodingTracks.count(); ++track) {
-            //encodingTracks[track]->setTrackName(names[track]);
-        }
-    }
-}
-
-void xEncodingTracksWidget::setTracks(int tracks) {
+void xEncodingTracksWidget::setTracks(const QVector<xAudioFile*>& tracks) {
     // Cleanup.
     for (auto& audioTrack : encodingTracks) {
         audioLayout->removeWidget(audioTrack);
@@ -217,16 +233,33 @@ void xEncodingTracksWidget::setTracks(int tracks) {
     delete audioLayout;
     delete audioMain;
     // Recreate.
-    encodingTracks.resize(tracks);
+    encodingTracks.resize(tracks.count());
     audioMain = new QWidget();
     audioLayout = new QVBoxLayout(audioMain);
     audioMain->setLayout(audioLayout);
-    for (int track = 0; track < tracks; ++track) {
-        auto trackItemWidget = new xEncodingTrackItemWidget(nullptr);
+    for (int track = 0; track < tracks.count(); ++track) {
+        auto trackItemWidget = new xEncodingTrackItemWidget(tracks[track]);
         audioLayout->addWidget(trackItemWidget);
         encodingTracks[track] = trackItemWidget;
     }
+    audioLayout->addStretch(10);
     setWidget(audioMain);
+}
+
+void xEncodingTracksWidget::setEncodedFormat(const QString& format) {
+    for (const auto& track : encodingTracks) {
+        track->setEncodedFormat(format);
+    }
+}
+
+QList<xEncodingTrackItemWidget*> xEncodingTracksWidget::getSelected() {
+    QList<xEncodingTrackItemWidget*> selected;
+    for (auto i = 0; i < encodingTracks.count(); ++i) {
+        if (encodingTracks[i]->isSelected()) {
+            selected.push_back(encodingTracks[i]);
+        }
+    }
+    return selected;
 }
 
 void xEncodingTracksWidget::selectAll() {
@@ -235,24 +268,16 @@ void xEncodingTracksWidget::selectAll() {
     }
 }
 
-void xEncodingTracksWidget::clear() {
-    setTracks(0);
-}
-
-#if 0
-QList<std::tuple<int,QString,QString>> xEncodingTracksWidget::isSelected() {
-    QList<std::tuple<int,QString,QString>> selectedTracks;
-    for (const auto& audioTrack : encodingTracks) {
-        if (audioTrack->isSelected()) {
-            selectedTracks.push_back(std::make_tuple(audioTrack->getAudioTrackNr(),
-                                                     audioTrack->getTrackNr(),
-                                                     audioTrack->getTrackName()));
-
-        }
+void xEncodingTracksWidget::deselectAll() {
+    for (auto& audioTrack : encodingTracks) {
+        audioTrack->setSelected(false);
     }
-    return selectedTracks;
 }
-#endif
+
+void xEncodingTracksWidget::clear() {
+    // Cleanup.
+    setTracks(QVector<xAudioFile*>());
+}
 
 void xEncodingTracksWidget::ripProgress(int track, int progress) {
     // Track are numbered from 1..n but encodingTracks index from 0..n-1.

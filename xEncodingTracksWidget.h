@@ -49,6 +49,7 @@ public:
      * @param name the new track name as string.
      */
     void setTrackName(const QString& name);
+    void setEncodedFormat(const QString& format);
 
     [[nodiscard]] QString getArtist() const;
     [[nodiscard]] QString getAlbum() const;
@@ -65,6 +66,8 @@ public:
      * @return the current track name as string.
      */
     [[nodiscard]] QString getTrackName() const;
+
+    [[nodiscard]] QString getEncodedFileName() const;
     /**
      * Select/deselect the current track.
      *
@@ -77,6 +80,8 @@ public:
      * @return true if the current track is selected, false otherwise.
      */
     [[nodiscard]] bool isSelected() const;
+
+    [[nodiscard]] xAudioFile* getAudioFile() const;
 
     void viewOutput(bool autofill=false);
     /**
@@ -93,12 +98,15 @@ public:
     void ripProgress(int progress);
 
 private slots:
+    void updateEncodedFileName();
     void toggleViews();
+
 
 private:
     xAudioFile* audioFile;
+    QString encodedFormat;
     QPushButton* editInfo;
-    QLabel* encodedFileName;
+    QLineEdit* encodedFileName;
     QProgressBar* encodedProgress;
     QWidget* trackInfo;
     QLineEdit* artistName;
@@ -135,19 +143,20 @@ public:
     /**
      * Set all track names using the generic name "track".
      */
-    void autofill();
-    /**
-     * Set the number of tracks.
-     *
-     * @param tracks the new number of tracks as integer.
-     */
-    void setTracks(int tracks);
+    void viewInput();
+
+    void viewOutput(bool autofill=false);
     /**
      * Set all track names.
      *
      * @param names the new track names as vector of strings.
      */
     void setTracks(const QVector<xAudioFile*>& files);
+
+    void setEncodedFormat(const QString& format);
+
+    [[nodiscard]] QList<xEncodingTrackItemWidget*> getSelected();
+
     /**
      * Clear the widget. Remove all tracks.
      */
@@ -165,6 +174,10 @@ public slots:
      */
     void selectAll();
     /**
+     * Deselect all tracks.
+     */
+    void deselectAll();
+    /**
      * Update the progress of the rip process.
      *
      * @param track number of the track currently ripped.
@@ -176,7 +189,6 @@ private:
     int audioTracksOffset;
     QWidget* audioMain;
     QVBoxLayout* audioLayout;
-    QVector<xAudioFile*> audioTracks;
     QVector<xEncodingTrackItemWidget*> encodingTracks;
 };
 

@@ -17,7 +17,8 @@
 
 #include "xAudioFile.h"
 #include "xEncodingTracksWidget.h"
-#include <QListWidget>
+#include <QTabWidget>
+#include <QRadioButton>
 #include <QWidget>
 
 class xMainEncodingWidget:public QWidget {
@@ -25,15 +26,42 @@ class xMainEncodingWidget:public QWidget {
 
 public:
     explicit xMainEncodingWidget(QWidget* parent=nullptr, Qt::WindowFlags flags=Qt::WindowFlags());
-    ~xMainEncodingWidget() override;
+    ~xMainEncodingWidget() noexcept override;
 
 public slots:
-    void audioFiles(QList<xAudioFile*> files);
+    void audioFiles(const QList<xAudioFile*>& files);
+
+private slots:
+    void setAllEnabled(bool enabled);
+    void editAll();
+    void finishAll();
+    void selectAll();
+    void deselectAll();
+    void encode();
+    void encodeFinished();
+    void backup();
+    void backupFinished();
+    void clear();
 
 private:
-    QVector<xAudioFile*> encodingAudioFiles;
-    xEncodingTracksWidget* encodingTracksWidget;
+    void updateEncodedFileNames();
+    void createEncodingTracksWidgets();
 
+    QVector<QVector<xAudioFile*>> encodingAudioFiles;
+    QVector<xEncodingTracksWidget*> encodingTracksWidgets;
+    QTabWidget* encodingTracksTab;
+    QLineEdit* formatEncodingFormatInput;
+    QLineEdit* formatFileFormatInput;
+    QPushButton* encodeSelectAllButton;
+    QPushButton* encodeDeselectAllButton;
+    QPushButton* encodeEditAllButton;
+    QPushButton* encodeFinishAllButton;
+    QPushButton* encodeBackupButton;
+    QPushButton* encodeEncodeButton;
+    QPushButton* encodeClearButton;
+    QRadioButton* encodeUseEncodingButton;
+    QRadioButton* encodeUseFileButton;
+    xAudioFileEncoding* encoding;
 };
 
 #endif
