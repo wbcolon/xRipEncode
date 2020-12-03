@@ -15,6 +15,7 @@
 #ifndef __XAUDIOCD_H__
 #define __XAUDIOCD_H__
 
+#include "xAudioFile.h"
 #include <QThread>
 #include <QList>
 #include <QString>
@@ -73,10 +74,10 @@ public:
      * Constructor.
      *
      * @param drive pointer to the structure required by libcdio-paranoia.
-     * @param tracks list of pairs of track number and names to be ripped.
+     * @param tracks a list of audio files containing the necessary info.
      * @param parent pointer to the parent widget.
      */
-    xAudioCDRipper(cdrom_drive_t* drive, const QList<std::pair<int,QString>>& tracks, QObject* parent=nullptr);
+    xAudioCDRipper(cdrom_drive_t* drive, const QList<xAudioFile*>& tracks, QObject* parent=nullptr);
     /**
      * Destructor (default)
      */
@@ -123,7 +124,7 @@ private:
     static void writeWaveHeader(QDataStream& dataStream, int byteCount);
 
     cdrom_drive_t* audioDrive;
-    QList<std::pair<int,QString>> audioTracks;
+    QList<xAudioFile*> audioTracks;
 };
 
 
@@ -168,15 +169,21 @@ public:
     /**
      * Rip the tracks from the audio CD.
      *
-     * @param tracks a list of pairs of track number and corresponding file names.
+     * @param tracks a list of audio files containing the necessary info.
      */
-    void rip(const QList<std::pair<int, QString>>& tracks);
+    void rip(const QList<xAudioFile*>& tracks);
     /**
      * Cancel the current rip process.
      */
     void ripCancel();
 
 signals:
+    /**
+     * Signal emitted after track have been ripped.
+     *
+     * @param tracks list of audio file objects.
+     */
+    void audioFiles(const QList<xAudioFile*>& tracks);
     /**
      * Signal emitted (forwarded) to show the rip progress.
      *
@@ -213,6 +220,7 @@ private slots:
 private:
     cdrom_drive_t* audioDrive;
     xAudioCDRipper* audioRipper;
+    QList<xAudioFile*> audioTracks;
 };
 
 #endif

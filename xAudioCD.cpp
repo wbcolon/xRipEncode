@@ -147,35 +147,34 @@ void xAudioCDLookup::run() {
  * This class handles the rip process in a separate thread. The process is initiated
  * from the xAudioCD class. Output is written as wav files.
  */
-xAudioCDRipper::xAudioCDRipper(cdrom_drive_t* drive, const QList<std::pair<int, QString>>& tracks, QObject* parent):
+xAudioCDRipper::xAudioCDRipper(cdrom_drive_t* drive, const QList<xAudioFile*>& tracks, QObject* parent):
         QThread(parent),
         audioDrive(drive),
         audioTracks(tracks) {
 }
 
 void xAudioCDRipper::run() {
-    // Retrieve current temp file.
-    auto tempFileDirectory = xRipEncodeConfiguration::configuration()->getTempDirectory();
     // Init paranoia.
     cdrom_paranoia_t* audioDriveParanoia = paranoia_init(audioDrive);
     for (const auto& track : audioTracks) {
-        if ((track.first <= 0) || (track.first > audioDrive->tracks)) {
-            qInfo() << "Illegal track number: " << track.first << ". Ignore and continue.";
+        auto trackNr = track->getAudioTrackNr();
+        if ((trackNr <= 0) || (trackNr > audioDrive->tracks)) {
+            qInfo() << "Illegal track number: " << track->getAudioTrackNr() << ". Ignore and continue.";
             continue;
         }
-        lsn_t iFirstLsn = cdda_track_firstsector(audioDrive, track.first);
-        lsn_t iLastLsn = cdda_track_lastsector(audioDrive, track.first);
+        lsn_t iFirstLsn = cdda_track_firstsector(audioDrive, trackNr);
+        lsn_t iLastLsn = cdda_track_lastsector(audioDrive, trackNr);
         // Set reading mode for full paranoia, but allow skipping sectors.
         paranoia_modeset(audioDriveParanoia, PARANOIA_MODE_FULL^PARANOIA_MODE_NEVERSKIP);
         paranoia_seek(audioDriveParanoia, iFirstLsn, SEEK_SET);
         // Compute byte count. We need the size for the wav header.
         int byteCount = (iLastLsn-iFirstLsn+1) * CDIO_CD_FRAMESIZE_RAW;
         // Create wave file.
-        auto wavFilePath = tempFileDirectory+"/"+track.second;
+        auto wavFilePath = track->getFileName();
         QFile wavFile(wavFilePath);
         if (!wavFile.open(QIODevice::WriteOnly)) {
             qCritical() << "Unable to open wav file: " << wavFilePath;
-            emit error(track.first, "Unable to open wav file: "+wavFilePath, true);
+            emit error(trackNr, "Unable to open wav file: "+wavFilePath, true);
             continue;
         }
         QDataStream wavFileStream(&wavFile);
@@ -190,22 +189,22 @@ void xAudioCDRipper::run() {
             char* cddaMessages = cdda_messages(audioDrive);
             if (cddaErrors) {
                 qCritical() << "CDDA Errors: " << cddaErrors;
-                emit error(track.first, QString(cddaErrors), false);
+                emit error(trackNr, QString(cddaErrors), false);
                 free(cddaErrors);
             }
             if (cddaMessages) {
                 qInfo() << "CDDA Messages: " << cddaMessages;
-                emit messages(track.first, QString(cddaMessages));
+                emit messages(trackNr, QString(cddaMessages));
                 free(cddaMessages);
             }
             if (!readBuffer) {
                 // Notify UI about the error.
-                emit error(track.first, tr("Aborted due to a paranoia reading error"), true);
+                emit error(trackNr, tr("Aborted due to a paranoia reading error"), true);
                 // Remove the corresponding wav file.
                 wavFile.remove();
                 break;
             }
-            emit progress(track.first, ((i-iFirstLsn)*100)/(iLastLsn-iFirstLsn));
+            emit progress(trackNr, ((i-iFirstLsn)*100)/(iLastLsn-iFirstLsn));
             wavFileStream.writeRawData((char* )readBuffer, CDIO_CD_FRAMESIZE_RAW);
         }
     }
@@ -283,6 +282,11 @@ bool xAudioCD::detect() {
 }
 
 void xAudioCD::eject() {
+    if (!audioDrive) {
+        if (!detect()) {
+            return;
+        }
+    }
     if (audioDrive) {
         if (cdio_eject_media(&audioDrive->p_cdio)) {
             qCritical() << "Unable to eject disc.";
@@ -377,12 +381,13 @@ QString xAudioCD::getID() {
     return id;
 }
 
-void xAudioCD::rip(const QList<std::pair<int, QString>>& tracks) {
+void xAudioCD::rip(const QList<xAudioFile*>& tracks) {
     if (audioRipper) {
         qInfo() << "Unable to start another rip process while current in progress.";
         return;
     }
-    audioRipper = new xAudioCDRipper(audioDrive, tracks, this);
+    audioTracks = tracks;
+    audioRipper = new xAudioCDRipper(audioDrive, audioTracks, this);
     // Forward signals.
     connect(audioRipper, &xAudioCDRipper::progress, this, &xAudioCD::ripProgress);
     connect(audioRipper, &xAudioCDRipper::messages, this, &xAudioCD::ripMessages);
@@ -396,9 +401,9 @@ void xAudioCD::ripCancel() {
     if (audioRipper) {
         // End the thread.
         audioRipper->quit();
-        // Delete and reset the object.
-        delete audioRipper;
+        // Reset the object.
         audioRipper = nullptr;
+        audioTracks.clear();
     }
 }
 
@@ -407,5 +412,6 @@ void xAudioCD::ripThreadFinished() {
         delete audioRipper;
         audioRipper = nullptr;
         emit ripFinished();
+        emit audioFiles(audioTracks);
     }
 }
