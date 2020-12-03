@@ -36,6 +36,7 @@ const char* xRipEncodeConfiguration_MKVExtract { "xRipEncode/MKVExtract" };
 const char* xRipEncodeConfiguration_Flac { "xRipEncode/Flac" };
 const char* xRipEncodeConfiguration_WavPack { "xRipEncode/WavPack" };
 const char* xRipEncodeConfiguration_Tags { "xRipEncode/Tags" };
+const char* xRipEncodeConfiguration_TagInfos { "xRipEncode/TagInfos" };
 // Default values.
 const char* xRipEncodeConfiguration_TempDirectory_Default { "/tmp" };
 const char* xRipEncodeConfiguration_BackupDirectory_Default { "/tmp" };
@@ -52,6 +53,7 @@ const char* xRipEncodeConfiguration_MKVExtract_Default { "/usr/bin/mkvextract" }
 const char* xRipEncodeConfiguration_Flac_Default { "/usr/bin/flac" };
 const char* xRipEncodeConfiguration_WavPack_Default { "/usr/bin/wavpack" };
 const char* xRipEncodeConfiguration_Tags_Default { "| [hd]| [%1.1]| [hd-%1.1]" };
+const char* xRipEncodeConfiguration_TagInfos_Default { "CD/Stereo|HD/Stereo|CD/MultiChannel|HD/MultiChannel" };
 
 // singleton object.
 xRipEncodeConfiguration* xRipEncodeConfiguration::ripEncodeConfiguration = nullptr;
@@ -249,6 +251,11 @@ QString xRipEncodeConfiguration::getWavPack() const {
 QStringList xRipEncodeConfiguration::getTags() const {
     auto tags = settings->value(xRipEncodeConfiguration_Tags, xRipEncodeConfiguration_Tags_Default).toString();
     return tags.split('|');
+}
+
+QStringList xRipEncodeConfiguration::getTagInfos() const {
+    auto tagInfos = settings->value(xRipEncodeConfiguration_TagInfos, xRipEncodeConfiguration_TagInfos_Default).toString();
+    return tagInfos.split('|');
 }
 
 void xRipEncodeConfiguration::updatedConfiguration() {

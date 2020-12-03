@@ -28,7 +28,16 @@ class xRipEncodeConfigurationDialog:public QDialog {
     Q_OBJECT
 
 public:
+    /**
+     * Constructor.
+     *
+     * @param parent pointer to the parent object.
+     * @param flags window flags.
+     */
     explicit xRipEncodeConfigurationDialog(QWidget* parent=nullptr, Qt::WindowFlags flags=Qt::WindowFlags());
+    /**
+     * Destructor.
+     */
     ~xRipEncodeConfigurationDialog() override = default;
 
 public slots:
@@ -42,13 +51,42 @@ private slots:
      * Save any updates into the configuration.
      */
     void saveSettings();
+    /**
+     * Select a from/to entry from the replace list.
+     *
+     * @param item pointer to the selected item.
+     */
     void selectReplaceEntry(QListWidgetItem* item);
+    /**
+     * Add a from/to to the replace list.
+     */
     void replaceEntryAdd();
+    /**
+     * Remove the selected from/to from the replace list.
+     */
     void replaceEntryRemove();
 
 private:
+    /**
+     * Open a dialog in order to select a directory.
+     *
+     * @param title the title for the directory dialog.
+     * @param lineEdit pointer to the line edit object that is updated.
+     */
     void openDirectory(const QString& title, QLineEdit* lineEdit);
+    /**
+     * Open a dialog in order to select a file.
+     *
+     * @param title the title for the directory dialog.
+     * @param lineEdit pointer to the line edit object that is updated.
+     */
     void openFile(const QString& title, QLineEdit* lineEdit);
+    /**
+     * Split an entry into a pair of from/to.
+     *
+     * @param entry the entry as string.
+     * @return a pair of from/to strings.
+     */
     static std::pair<QString,QString> splitReplaceEntries(const QString& entry);
 
     QLineEdit* fileTempDirectoryInput;
@@ -66,7 +104,6 @@ private:
     QLineEdit* replaceFromInput;
     QLineEdit* replaceToInput;
     QListWidget* replaceList;
-
 };
 
 #endif
