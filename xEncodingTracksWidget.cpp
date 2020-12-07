@@ -86,26 +86,32 @@ xEncodingTrackItemWidget::xEncodingTrackItemWidget(xAudioFile* file, QWidget* pa
 
 void xEncodingTrackItemWidget::setArtist(const QString& artist) {
     artistName->setText(artist);
+    updateEncodedFileName();
 }
 
 void xEncodingTrackItemWidget::setAlbum(const QString& album) {
     albumName->setText(album);
+    updateEncodedFileName();
 }
 
 void xEncodingTrackItemWidget::setTag(const QString& tag) {
     tagName->setText(tag);
+    updateEncodedFileName();
 }
 
 void xEncodingTrackItemWidget::setTrackNrOffset(int offset) {
     trackNr->setText(QString("%1").arg(audioFile->getTrackNr().toInt()+offset, 2, 10, QChar('0')));
+    updateEncodedFileName();
 }
 
 void xEncodingTrackItemWidget::setTrackNr(const QString& nr) {
     trackNr->setText(nr);
+    updateEncodedFileName();
 }
 
 void xEncodingTrackItemWidget::setTrackName(const QString& name) {
     trackName->setText(name);
+    updateEncodedFileName();
 }
 
 
@@ -167,12 +173,13 @@ void xEncodingTrackItemWidget::viewOutput(bool autofill) {
         albumName->setText(tr("album"));
         tagName->setText(tr(""));
         trackName->setText(tr("track"));
-        updateEncodedFileName();
     }
+    updateEncodedFileName();
 }
 
 void xEncodingTrackItemWidget::viewInput() {
     mainStacked->setCurrentWidget(trackInfo);
+    updateEncodedFileName();
 }
 
 void xEncodingTrackItemWidget::ripProgress(int progress) {

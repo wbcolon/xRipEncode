@@ -199,6 +199,12 @@ public slots:
     void ripProgress(int track, int progress);
 
 private:
+    /**
+     * Convert the time in ms to a human readable time string.
+     *
+     * @param ms the time to be converted in ms.
+     * @return the human readable time string.
+     */
     static QString millisecondsToLabel(qint64 ms);
 
     int audioTracksOffset;

@@ -26,12 +26,27 @@ class xAudioFileEncoding:public QThread {
     Q_OBJECT
 
 public:
+    /**
+     * Constructor.
+     *
+     * @param files list of pairs of audio file objects and file names.
+     * @param flac encode as flac if true, wavpack otherwise.
+     * @param parent pointer to the parent object.
+     */
     explicit xAudioFileEncoding(const QList<std::pair<xAudioFile*,QString>>& files, bool flac, QObject* parent=nullptr);
     ~xAudioFileEncoding() override = default;
-
+    /**
+     * Encode all files in the queue in a separate thread.
+     */
     void run() override;
 
 signals:
+    /**
+     * Signal emitted to indicate progress of encoding process.
+     *
+     * @param track the number of the track currently encoded.
+     * @param progress the encoding progress for the current track.
+     */
     void encodingProgress(int track, int progress);
 
 private:
@@ -44,25 +59,109 @@ class xAudioFile:public QObject {
     Q_OBJECT
 
 public:
+    /**
+     * Constructor. Create empty audio file object.
+     */
     xAudioFile();
+    /**
+     * Constructor. Create an audio file object connected to a file.
+     *
+     * @param fileName the absolute path to the file as string.
+     * @param audioTrackNr the track of the audio CD or chapter in the movie file.
+     * @param artist the artist name as string.
+     * @param album the album name as string.
+     * @param trackNr the track number as string
+     * @param trackName the track name as string.
+     * @param tag the additional tag as string.
+     * @param tagId the corresponding tag ID.
+     * @param parent pointer to the parent object.
+     */
     xAudioFile(const QString& fileName, int audioTrackNr, const QString& artist, const QString& album,
                const QString& trackNr, const QString& trackName, const QString& tag, int tagId, QObject* parent=nullptr);
+    /**
+     * Copy constructor.
+     *
+     * @param copy a reference to the object to make a copy of.
+     */
     xAudioFile(const xAudioFile& copy);
-    ~xAudioFile() override = default;
-
-    [[nodiscard]] QString getFileName() const;
+    /**
+     * Destructor. Remove the file attached to the object.
+     */
+    ~xAudioFile() noexcept override;
+    /**
+     * Get the file name of the attached object.
+     *
+     * @return the path to the file as string.
+     */
+    [[nodiscard]] const QString& getFileName() const;
+    /**
+     * Get the track number/chapter.
+     *
+     * @return the track number or chapter as integer.
+     */
     [[nodiscard]] int getAudioTrackNr() const;
-    [[nodiscard]] QString getArtist() const;
-    [[nodiscard]] QString getAlbum() const;
-    [[nodiscard]] QString getTrackNr() const;
-    [[nodiscard]] QString getTrackName() const;
-    [[nodiscard]] QString getTag() const;
+    /**
+     * Get the artist used as tag.
+     *
+     * @return the artist name as string.
+     */
+    [[nodiscard]] const QString& getArtist() const;
+    /**
+     * Get the album used as tag.
+     *
+     * @return the album name as string.
+     */
+    [[nodiscard]] const QString& getAlbum() const;
+    /**
+     * Get the track number used as tag.
+     *
+     * @return the track number as string.
+     */
+    [[nodiscard]] const QString& getTrackNr() const;
+    /**
+     * Get the track name used as tag.
+     *
+     * @return the track name as string.
+     */
+    [[nodiscard]] const QString& getTrackName() const;
+    /**
+     * Get the hd/multi-channel tag used.
+     *
+     * @return the tag as string.
+     */
+    [[nodiscard]] const QString& getTag() const;
+    /**
+     * Get the hd/multi-channel tag ID.
+     *
+     * @return the tag ID as integer.
+     */
     [[nodiscard]] int getTagId() const;
-
+    /**
+     * Encode the audio file into a wavpack file. No tags.
+     *
+     * @param wavPackFileName the name of the wavpack output file.
+     * @return true, if the encoding process was successful, false otherwise.
+     */
     bool encodeWavPack(const QString& wavPackFileName);
+    /**
+     * Encode the audio file into a flac file. Artist, album, etc. tags are set.
+     *
+     * @param flacFileName the name of the flac output file.
+     * @return true, if the encoding process was successful, false otherwise.
+     */
     bool encodeFlac(const QString& flacFileName);
+    /**
+     * Remove the file attached to the object.
+     */
+    void remove();
 
 signals:
+    /**
+     * Signal emitted to indicate progress of encoding process.
+     *
+     * @param track the number of the track currently encoded.
+     * @param progress the encoding progress for the current track.
+     */
     void encodingProgress(int track, int progress);
 
 private slots:

@@ -18,13 +18,10 @@
 #include <QListWidget>
 #include <QLineEdit>
 #include <QGridLayout>
-#include <QHBoxLayout>
-#include <QCheckBox>
 #include <QRadioButton>
 #include <QButtonGroup>
 #include <QGroupBox>
 #include <QLabel>
-#include <QDebug>
 
 xMainEncodingWidget::xMainEncodingWidget(QWidget *parent, Qt::WindowFlags flags):
         QWidget(parent, flags),
@@ -53,7 +50,7 @@ xMainEncodingWidget::xMainEncodingWidget(QWidget *parent, Qt::WindowFlags flags)
     encodeSelectAllButton = new QPushButton(tr("Select All"), encodeBox);
     encodeDeselectAllButton = new QPushButton(tr("Deselect All"), encodeBox);
     encodeEditAllButton = new QPushButton(tr("Edit All"), encodeBox);
-    encodeFinishAllButton = new QPushButton(tr("Finish All"), encodeBox);
+    encodeOutputAllButton = new QPushButton(tr("Output All"), encodeBox);
     encodeBackupButton = new QPushButton(tr("Backup"), encodeBox);
     encodeEncodeButton = new QPushButton(tr("Encode"), encodeBox);
     encodeClearButton = new QPushButton(tr("Clear"), encodeBox);
@@ -62,7 +59,7 @@ xMainEncodingWidget::xMainEncodingWidget(QWidget *parent, Qt::WindowFlags flags)
     encodeLayout->setRowMinimumHeight(2, 50);
     encodeLayout->setRowStretch(2, 0);
     encodeLayout->addWidget(encodeEditAllButton, 3, 0);
-    encodeLayout->addWidget(encodeFinishAllButton, 3, 1);
+    encodeLayout->addWidget(encodeOutputAllButton, 3, 1);
     encodeLayout->setRowMinimumHeight(4, 20);
     encodeLayout->setRowStretch(4, 0);
     encodeLayout->addWidget(encodeSelectAllButton, 5, 0);
@@ -99,7 +96,7 @@ xMainEncodingWidget::xMainEncodingWidget(QWidget *parent, Qt::WindowFlags flags)
     formatFileFormatInput->setText(xRipEncodeConfiguration::configuration()->getFileNameFormat());
     // Connect buttons.
     connect(encodeEditAllButton, &QPushButton::pressed, this, &xMainEncodingWidget::editAll);
-    connect(encodeFinishAllButton, &QPushButton::pressed, this, &xMainEncodingWidget::finishAll);
+    connect(encodeOutputAllButton, &QPushButton::pressed, this, &xMainEncodingWidget::outputAll);
     connect(encodeSelectAllButton, &QPushButton::pressed, this, &xMainEncodingWidget::selectAll);
     connect(encodeDeselectAllButton, &QPushButton::pressed, this, &xMainEncodingWidget::deselectAll);
     connect(encodeEncodeButton, &QPushButton::pressed, this, &xMainEncodingWidget::encode);
@@ -121,7 +118,7 @@ void xMainEncodingWidget::setAllEnabled(bool enabled) {
     encodeUseEncodingButton->setEnabled(enabled);
     encodeUseFileButton->setEnabled(enabled);
     encodeEditAllButton->setEnabled(enabled);
-    encodeFinishAllButton->setEnabled(enabled);
+    encodeOutputAllButton->setEnabled(enabled);
     encodeSelectAllButton->setEnabled(enabled);
     encodeDeselectAllButton->setEnabled(enabled);
     encodeEncodeButton->setEnabled(enabled);
@@ -136,7 +133,7 @@ void xMainEncodingWidget::editAll() {
     }
 }
 
-void xMainEncodingWidget::finishAll() {
+void xMainEncodingWidget::outputAll() {
     auto currentIndex = encodingTracksTab->currentIndex();
     if ((currentIndex >= 0) && (currentIndex < encodingTracksWidgets.count())) {
         encodingTracksWidgets[currentIndex]->viewOutput();
@@ -160,9 +157,10 @@ void xMainEncodingWidget::deselectAll() {
 void xMainEncodingWidget::encode() {
     auto currentIndex = encodingTracksTab->currentIndex();
     if ((currentIndex >= 0) && (currentIndex < encodingTracksWidgets.count())) {
+        auto encodingDirectory = xRipEncodeConfiguration::configuration()->getEncodingDirectory();
         QList<std::pair<xAudioFile*,QString>> encodingFiles;
         for (auto& selected : encodingTracksWidgets[currentIndex]->getSelected()) {
-            encodingFiles.push_back(std::make_pair(selected->getAudioFile(), selected->getEncodedFileName()+".flac"));
+            encodingFiles.push_back(std::make_pair(selected->getAudioFile(), encodingDirectory+"/"+selected->getEncodedFileName()+".flac"));
         }
         if (!encodingFiles.isEmpty()) {
             setAllEnabled(false);
@@ -184,9 +182,10 @@ void xMainEncodingWidget::encodeFinished() {
 void xMainEncodingWidget::backup() {
     auto currentIndex = encodingTracksTab->currentIndex();
     if ((currentIndex >= 0) && (currentIndex < encodingTracksWidgets.count())) {
+        auto backupDirectory = xRipEncodeConfiguration::configuration()->getBackupDirectory();
         QList<std::pair<xAudioFile*,QString>> encodingFiles;
         for (auto& selected : encodingTracksWidgets[currentIndex]->getSelected()) {
-            encodingFiles.push_back(std::make_pair(selected->getAudioFile(), selected->getEncodedFileName()+".wv"));
+            encodingFiles.push_back(std::make_pair(selected->getAudioFile(), backupDirectory+"/"+selected->getEncodedFileName()+".wv"));
         }
         if (!encodingFiles.isEmpty()) {
             setAllEnabled(false);

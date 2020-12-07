@@ -19,7 +19,6 @@
  */
 
 #include "xAudioCD.h"
-#include "xRipEncodeConfiguration.h"
 #include <QFile>
 #include <QDataStream>
 #include <QCryptographicHash>
@@ -170,7 +169,7 @@ void xAudioCDRipper::run() {
         // Compute byte count. We need the size for the wav header.
         int byteCount = (iLastLsn-iFirstLsn+1) * CDIO_CD_FRAMESIZE_RAW;
         // Create wave file.
-        auto wavFilePath = track->getFileName();
+        const auto& wavFilePath = track->getFileName();
         QFile wavFile(wavFilePath);
         if (!wavFile.open(QIODevice::WriteOnly)) {
             qCritical() << "Unable to open wav file: " << wavFilePath;
@@ -241,9 +240,7 @@ xAudioCD::xAudioCD(QObject* parent):
 }
 
 xAudioCD::~xAudioCD() {
-    if (audioDrive) {
-        cdda_close(audioDrive);
-    }
+    close();
 }
 
 bool xAudioCD::detect() {

@@ -37,22 +37,65 @@ public:
      * Destructor.
      */
     ~xEncodingTrackItemWidget() override = default;
-
+    /**
+     * Set the artist used in the file name.
+     *
+     * @param artist the new artist name as string.
+     */
     void setArtist(const QString& artist);
+    /**
+     * Set the album used in the file name.
+     *
+     * @param album the new album name as string.
+     */
     void setAlbum(const QString& album);
+    /**
+     * Set the HD/multi-channel tag used in the file name.
+     *
+     * @param tag the HD/multi-channel tag as string.
+     */
     void setTag(const QString& tag);
-    void setTrackNrOffset(int offset);
+    /**
+     * Set the track number used in the file name.
+     *
+     * @param nr the new track number as string.
+     */
     void setTrackNr(const QString& nr);
+    /**
+     * Set the offset to actual track or chapter.
+     *
+     * @param offset the offset as integer.
+     */
+    void setTrackNrOffset(int offset);
     /**
      * Set the track name used in the file name.
      *
      * @param name the new track name as string.
      */
     void setTrackName(const QString& name);
+    /**
+     * Set the format string used to determine the file name.
+     *
+     * @param format the new format as string.
+     */
     void setEncodedFormat(const QString& format);
-
+    /**
+     * Retrieve the artist used in the file name.
+     *
+     * @return the artist as string.
+     */
     [[nodiscard]] QString getArtist() const;
+    /**
+     * Retrieve the album used in the file name.
+     *
+     * @return the album as string.
+     */
     [[nodiscard]] QString getAlbum() const;
+    /**
+     * Retrieve the HD/multi-channel tag used in the file name.
+     *
+     * @return the HD/multi-channel tag as string.
+     */
     [[nodiscard]] QString getTag() const;
     /**
      * Retrieve the track number used in the file name.
@@ -66,7 +109,11 @@ public:
      * @return the current track name as string.
      */
     [[nodiscard]] QString getTrackName() const;
-
+    /**
+     * Retrieve the file name for the encoded file.
+     *
+     * @return the current file name as string.
+     */
     [[nodiscard]] QString getEncodedFileName() const;
     /**
      * Select/deselect the current track.
@@ -80,14 +127,20 @@ public:
      * @return true if the current track is selected, false otherwise.
      */
     [[nodiscard]] bool isSelected() const;
-
-    [[nodiscard]] xAudioFile* getAudioFile() const;
-
-    void viewOutput(bool autofill=false);
     /**
-     * Switch to the track name view of the widget.
+     * Retrieve the audio file object attached to the item.
+     *
+     * @return pointer to the audio file object.
+     */
+    [[nodiscard]] xAudioFile* getAudioFile() const;
+    /**
+     * Switch to the output file name view of the widget.
      *
      * @param autofill set a generic name if true.
+     */
+    void viewOutput(bool autofill=false);
+    /**
+     * Switch to the track name input view of the widget.
      */
     void viewInput();
     /**
@@ -98,9 +151,14 @@ public:
     void ripProgress(int progress);
 
 private slots:
+    /**
+     * Update the file name based on the format string and the widgets current input.
+     */
     void updateEncodedFileName();
+    /**
+     * Toggle from in between input and output view.
+     */
     void toggleViews();
-
 
 private:
     xAudioFile* audioFile;
@@ -137,28 +195,39 @@ public:
      */
     explicit xEncodingTracksWidget(QWidget* parent=nullptr);
     /**
-     * Destructor
+     * Destructor. Default
      */
     ~xEncodingTracksWidget() override = default;
     /**
-     * Set all track names using the generic name "track".
+     * Select the input view for all items.
      */
     void viewInput();
-
+    /**
+     * Select the output view for all items.
+     *
+     * @param autofill use generic names for all items if true.
+     */
     void viewOutput(bool autofill=false);
     /**
-     * Set all track names.
+     * Create all items with attached audio file objects.
      *
      * @param names the new track names as vector of strings.
      */
     void setTracks(const QVector<xAudioFile*>& files);
-
-    void setEncodedFormat(const QString& format);
-
-    [[nodiscard]] QList<xEncodingTrackItemWidget*> getSelected();
-
     /**
-     * Clear the widget. Remove all tracks.
+     * Set the format string for all items.
+     *
+     * @param format the new format as string.
+     */
+    void setEncodedFormat(const QString& format);
+    /**
+     * Retrieve the currently selected items.
+     *
+     * @return a list of pointer to the item widgets.
+     */
+    [[nodiscard]] QList<xEncodingTrackItemWidget*> getSelected();
+    /**
+     * Clear the widget. Remove all items.
      */
     void clear();
 

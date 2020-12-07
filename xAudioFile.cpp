@@ -26,14 +26,14 @@ xAudioFileEncoding::xAudioFileEncoding(const QList<std::pair<xAudioFile*,QString
 
 void xAudioFileEncoding::run() {
     if (encodeFlac) {
-        for (const auto& encodeFile : encodeFiles) {
-            encodeFile.first->encodeFlac(encodeFile.second);
-            emit encodingProgress(encodeFile.first->getAudioTrackNr(), 100);
+        for (auto i = 0; i < encodeFiles.count(); ++i) {
+            encodeFiles[i].first->encodeFlac(encodeFiles[i].second);
+            emit encodingProgress(i+1, 100);
         }
     } else {
-        for (const auto& encodeFile : encodeFiles) {
-            encodeFile.first->encodeWavPack(encodeFile.second);
-            emit encodingProgress(encodeFile.first->getAudioTrackNr(), 100);
+        for (auto i = 0; i < encodeFiles.count(); ++i) {
+            encodeFiles[i].first->encodeWavPack(encodeFiles[i].second);
+            emit encodingProgress(i+1, 100);
         }
     }
 }
@@ -78,6 +78,10 @@ xAudioFile::xAudioFile(const xAudioFile& copy):
         encodingTag(copy.encodingTag),
         encodingTagId(copy.encodingTagId),
         process(nullptr) {
+}
+
+xAudioFile::~xAudioFile() noexcept {
+    remove();
 }
 
 bool xAudioFile::encodeWavPack(const QString& wavPackFileName) {
@@ -149,7 +153,15 @@ bool xAudioFile::encodeFlac(const QString& flacFileName) {
     }
 }
 
-QString xAudioFile::getFileName() const {
+void xAudioFile::remove() {
+    try {
+        std::filesystem::remove(inputFileName.toStdString());
+    } catch (std::filesystem::filesystem_error& e) {
+        qWarning() << "Unable to audio file: " << inputFileName << ", error: " << e.what() << ", ignoring.";
+    }
+}
+
+const QString& xAudioFile::getFileName() const {
     return inputFileName;
 }
 
@@ -157,23 +169,23 @@ int xAudioFile::getAudioTrackNr() const {
     return inputAudioTrackNr;
 }
 
-QString xAudioFile::getArtist() const {
+const QString& xAudioFile::getArtist() const {
     return encodingArtist;
 }
 
-QString xAudioFile::getAlbum() const {
+const QString& xAudioFile::getAlbum() const {
     return encodingAlbum;
 }
 
-QString xAudioFile::getTrackNr() const {
+const QString& xAudioFile::getTrackNr() const {
     return encodingTrackNr;
 }
 
-QString xAudioFile::getTrackName() const {
+const QString& xAudioFile::getTrackName() const {
     return encodingTrackName;
 }
 
-QString xAudioFile::getTag() const {
+const QString& xAudioFile::getTag() const {
     return encodingTag;
 }
 
