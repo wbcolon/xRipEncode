@@ -49,7 +49,7 @@ xMovieFileAudioStream xMovieFile::getAudioStreamInfo(int audio) {
     }
 }
 
-QString xMovieFile::getFileName() const {
+const QString& xMovieFile::getFileName() const {
     return movieFile;
 }
 
@@ -67,7 +67,8 @@ void xMovieFile::analyze(const QString& file) {
     process = new QProcess();
     process->setProcessChannelMode(QProcess::MergedChannels);
     process->start(xRipEncodeConfiguration::configuration()->getFFProbe(),
-                   {{"-v"},{"quiet"},{"-print_format"},{"json"},{"-show_streams"},{"-show_chapters"},movieFile});
+                   { {"-v"}, {"quiet"}, {"-print_format"}, {"json"}, {"-show_streams"},
+                   {"-show_chapters"}, {"-show_format"}, movieFile });
     process->waitForFinished(-1);
     // Process standard output (includes stderr) and interpret json.
     std::stringstream processOutput;
@@ -115,9 +116,16 @@ void xMovieFile::analyze(const QString& file) {
     QVector<qint64> movieFileTrackLengths;
     auto childTracks = movieFileInfo.get_child("chapters");
     for (boost::property_tree::ptree::value_type& childTrack : childTracks) {
-        // Convert start and end time to ms.
+        // Retrieve start and end time for each track (chapter)
         auto movieFileTrack = new xMovieFileTrack(childTrack.second.get<double>("start_time", 0.0),
                                                     childTrack.second.get<double>("end_time", 0.0), this);
+        movieFileTracks.push_back(movieFileTrack);
+        // Update track length.
+        movieFileTrackLengths.push_back(movieFileTrack->getLength());
+    }
+    // No actual chapter information found. Extract necessary infos from format section.
+    if (movieFileTracks.isEmpty()) {
+        auto movieFileTrack = new xMovieFileTrack(0.0, movieFileInfo.get<double>("format.duration"), this);
         movieFileTracks.push_back(movieFileTrack);
         // Update track length.
         movieFileTrackLengths.push_back(movieFileTrack->getLength());
@@ -160,14 +168,30 @@ void xMovieFile::run() {
     // First we need to split the movie file into tracks.
     movieFilePath = xRipEncodeConfiguration::configuration()->getTempDirectory();
     auto movieFileOutput = movieFilePath + "/" + xMovieFile_TemporaryFileBase;
-    // Redirect output only if necessary.
-    process = new QProcess();
-    process->setProcessChannelMode(QProcess::MergedChannels);
-    connect(process, &QProcess::readyReadStandardOutput, this, &xMovieFile::processOutput);
-    process->start(xRipEncodeConfiguration::configuration()->getMKVMerge(),
-                   { {"--split"}, {"chapters:all"}, movieFile, {"-o"}, movieFileOutput });
-    process->waitForFinished(-1);
-    disconnect(process, &QProcess::readyReadStandardOutput, this, &xMovieFile::processOutput);
+    if (movieFileTracks.count() > 1) {
+        // Redirect output only if necessary.
+        process = new QProcess();
+        process->setProcessChannelMode(QProcess::MergedChannels);
+        connect(process, &QProcess::readyReadStandardOutput, this, &xMovieFile::processOutput);
+        process->start(xRipEncodeConfiguration::configuration()->getMKVMerge(),
+                       { {"--split"}, {"chapters:all"}, movieFile, {"-o"}, movieFileOutput });
+        process->waitForFinished(-1);
+        disconnect(process, &QProcess::readyReadStandardOutput, this, &xMovieFile::processOutput);
+    } else {
+        // Create file name according to our scheme.
+        auto copyMovieFileOutput = movieFileOutput+"-001";
+        try {
+            // Copy the file as the copy will be removed after audio file extraction.
+            std::filesystem::copy_file(movieFile.toStdString(), copyMovieFileOutput.toStdString(),
+                                       std::filesystem::copy_options::overwrite_existing);
+            emit ripProgress(1, 50);
+        } catch (std::filesystem::filesystem_error& e) {
+            qCritical() << "Unable to copy \"" << movieFile << "\" to \"" << copyMovieFileOutput << "\", error: " << e.what();
+            return;
+        }
+        // Avoid issue with delete later on.
+        process = nullptr;
+    }
     // Attach the temporary file names to the movie tracks.
     for (auto index = 0; index < movieFileTracks.count(); ++index) {
         // File names start with index 1.

@@ -57,7 +57,7 @@ public:
      *
      * @return the absolute path as string.
      */
-    [[nodiscard]] QString getFileName() const;
+    [[nodiscard]] const QString& getFileName() const;
     /**
      * Compute the times for each track of the audio CD.
      *
