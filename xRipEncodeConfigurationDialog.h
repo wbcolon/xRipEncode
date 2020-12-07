@@ -16,6 +16,7 @@
 #define __XRIPENCODECONFIGURATIONDIALOG_H__
 
 #include "xRipEncodeConfiguration.h"
+#include "xReplaceWidget.h"
 
 #include <QDialog>
 #include <QSpinBox>
@@ -103,7 +104,7 @@ private:
     QCheckBox* formatFileNameLowerCase;
     QLineEdit* replaceFromInput;
     QLineEdit* replaceToInput;
-    QListWidget* replaceList;
+    xReplaceWidget* replaceList;
 };
 
 #endif

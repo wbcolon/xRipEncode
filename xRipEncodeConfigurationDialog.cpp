@@ -128,7 +128,7 @@ xRipEncodeConfigurationDialog::xRipEncodeConfigurationDialog(QWidget* parent, Qt
     replaceToLabel->setAlignment(Qt::AlignLeft);
     replaceFromInput = new QLineEdit(replaceBox);
     replaceToInput = new QLineEdit(replaceBox);
-    replaceList = new QListWidget(replaceBox);
+    replaceList = new xReplaceWidget(replaceBox);
     auto replaceButtons = new QDialogButtonBox(Qt::Horizontal, replaceBox);
     replaceButtons->addButton(QDialogButtonBox::Apply);
     replaceButtons->addButton(QDialogButtonBox::Discard);
@@ -194,7 +194,7 @@ void xRipEncodeConfigurationDialog::loadSettings() {
     replaceList->clear();
     auto replace = xRipEncodeConfiguration::configuration()->getFileNameReplace();
     for (const auto& replaceEntry : replace) {
-        replaceList->addItem(QString(R"(replace "%1" with "%2")").arg(replaceEntry.first).arg(replaceEntry.second));
+        replaceList->addReplace(replaceEntry.first, replaceEntry.second);
     }
 }
 
@@ -214,7 +214,8 @@ void xRipEncodeConfigurationDialog::saveSettings() {
     xRipEncodeConfiguration::configuration()->setFileNameLowerCase(formatFileNameLowerCase->isChecked());
     QList<std::pair<QString,QString>> replace;
     for (auto index = 0; index < replaceList->count(); ++index) {
-        replace.push_back(xRipEncodeConfigurationDialog::splitReplaceEntries(replaceList->item(index)->text()));
+        auto replaceWidget = dynamic_cast<xReplaceItemWidget*>(replaceList->itemWidget(replaceList->item(index)));
+        replace.push_back(std::make_pair(replaceWidget->getReplaceFrom(), replaceWidget->getReplaceTo()));
     }
     xRipEncodeConfiguration::configuration()->setFileNameReplace(replace);
     // End dialog.
@@ -223,9 +224,9 @@ void xRipEncodeConfigurationDialog::saveSettings() {
 
 void xRipEncodeConfigurationDialog::selectReplaceEntry(QListWidgetItem* item) {
     if (item) {
-        auto [replaceFrom,replaceTo] = xRipEncodeConfigurationDialog::splitReplaceEntries(item->text());
-        replaceFromInput->setText(replaceFrom);
-        replaceToInput->setText(replaceTo);
+        auto replaceWidget = dynamic_cast<xReplaceItemWidget*>(replaceList->itemWidget(item));
+        replaceFromInput->setText(replaceWidget->getReplaceFrom());
+        replaceToInput->setText(replaceWidget->getReplaceTo());
     } else {
         replaceFromInput->clear();
         replaceToInput->clear();
@@ -236,7 +237,7 @@ void xRipEncodeConfigurationDialog::replaceEntryAdd() {
     auto addReplaceFrom = replaceFromInput->text();
     auto addReplaceTo = replaceToInput->text();
     if (!addReplaceFrom.isEmpty()) {
-        replaceList->addItem(QString(R"(replace "%1" with "%2")").arg(addReplaceFrom).arg(addReplaceTo));
+        replaceList->addReplace(addReplaceFrom, addReplaceTo);
     }
 }
 

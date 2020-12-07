@@ -21,7 +21,8 @@
 #include <QDebug>
 
 xMainAudioCDWidget::xMainAudioCDWidget(QWidget *parent, Qt::WindowFlags flags):
-        QWidget(parent, flags) {
+        QWidget(parent, flags),
+        audioCDLookup(nullptr) {
 
     auto mainLayout = new QGridLayout(this);
     // Audio CD -  artist and album input and some control.
@@ -53,11 +54,11 @@ xMainAudioCDWidget::xMainAudioCDWidget(QWidget *parent, Qt::WindowFlags flags):
     audioCDLowerCase->setChecked(true);
     audioCDReplace = new QCheckBox(tr("Replace"), audioCDBox);
     audioCDReplace->setChecked(false);
-    audioCDReplaceView = new QListWidget(audioCDBox);
+    audioCDReplaceView = new xReplaceWidget(audioCDBox);
     // Fill replace view.
     auto replace = xRipEncodeConfiguration::configuration()->getFileNameReplace();
     for (const auto& entry : replace) {
-        audioCDReplaceView->addItem(QString(R"(replace "%1" with "%2")").arg(entry.first).arg(entry.second));
+        audioCDReplaceView->addReplace(entry.first, entry.second);
     }
     audioCDLayout->addWidget(audioCDLookupResultsLabel, 7, 0, 1, 5);
     audioCDLayout->addWidget(audioCDTrackOffsetLabel, 7, 5, 1, 1);
@@ -132,6 +133,11 @@ xMainAudioCDWidget::xMainAudioCDWidget(QWidget *parent, Qt::WindowFlags flags):
 }
 
 void xMainAudioCDWidget::musicBrainz() {
+    // Do not start another lookup while we currently running one.
+    if ((audioCDLookup) && (audioCDLookup->isRunning())) {
+        consoleText->append("Lookup already in progress.");
+        return;
+    }
     auto id = audioCD->getID();
     if (!id.isEmpty()) {
         // Initiate audio CD lookup. Request lowercase results.
@@ -142,13 +148,21 @@ void xMainAudioCDWidget::musicBrainz() {
 }
 
 void xMainAudioCDWidget::musicBrainzFinished() {
+    // Update results.
     lookupResults = audioCDLookup->result();
+    if (lookupResults.isEmpty()) {
+        // Notify that there are no results.
+        consoleText->append("Lookup failed. No results found.");
+    }
     audioCDLookupResults->clear();
     for (const auto& result : lookupResults) {
         audioCDLookupResults->addItem(QString("%1 - %2").arg(result.artist).arg(result.album));
     }
     audioCDLookupResults->setCurrentIndex(0);
     musicBrainzUpdate(0);
+    // Reset lookup thread.
+    delete audioCDLookup;
+    audioCDLookup = nullptr;
 }
 
 void xMainAudioCDWidget::musicBrainzUpdate(int index) {
@@ -183,10 +197,16 @@ void xMainAudioCDWidget::autofill() {
 void xMainAudioCDWidget::detect() {
     // Check for audio CD.
     if (audioCD->detect()) {
+        // Clear in album and artist.
+        audioCDArtistName->clear();
+        audioCDAlbumName->clear();
+        audioCDLookupResults->clear();
         // Fill in an item for each track on the audio CD.
         audioTracks->setTracks(audioCD->getTracks());
         // Fill in the times.
         audioTracks->setTrackLengths(audioCD->getTrackLengths());
+        // Try to do a musicbrainz lookup.
+        musicBrainz();
     }
 }
 
@@ -264,7 +284,6 @@ void xMainAudioCDWidget::ripFinished() {
 }
 
 QList<xAudioFile*> xMainAudioCDWidget::getTracks() {
-    QList<xAudioFile*> tracks;
     auto selectedTracks = audioTracks->isSelected();
     auto artistName = audioCDArtistName->text();
     auto albumName = audioCDAlbumName->text();
@@ -274,13 +293,14 @@ QList<xAudioFile*> xMainAudioCDWidget::getTracks() {
     fileFormat.replace("(artist)", artistName);
     fileFormat.replace("(album)", albumName);
     fileFormat.replace("(tag)", tagName);
+    QList<xAudioFile*> tracks;
     for (const auto& track : selectedTracks) {
         auto trackFileFormat = fileFormat;
         trackFileFormat.replace("(tracknr)", std::get<1>(track));
         trackFileFormat.replace("(trackname)", std::get<2>(track));
         trackFileFormat.append(".wav");
-        tracks.push_back(new xAudioFile(trackFileFormat, std::get<0>(track), artistName, albumName,
-                                        std::get<1>(track), std::get<2>(track), tagName, 0));
+        tracks.push_back(new xAudioFile(tempDirectory+"/"+trackFileFormat, std::get<0>(track), artistName,
+                                        albumName, std::get<1>(track), std::get<2>(track), tagName, 0));
     }
     return tracks;
 }

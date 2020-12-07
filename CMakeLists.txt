@@ -29,6 +29,7 @@ set(CMAKE_REQUIRED_LIBRARIES "${LIBMUSICBRAINZ5CC_LIBRARIES} ${LIBCDIO_LIBRARIES
 add_executable(xRipEncode
         xRipEncodeConfiguration.cpp
         xRipEncodeConfigurationDialog.cpp
+        xReplaceWidget.cpp
         xAudioFile.cpp
         xAudioTracksWidget.cpp
         xAudioCD.cpp
