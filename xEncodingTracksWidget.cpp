@@ -26,6 +26,7 @@ xEncodingTrackItemWidget::xEncodingTrackItemWidget(xAudioFile* file, QWidget* pa
         audioFile(file) {
     auto mainLayout = new QGridLayout(this);
     trackSelect = new QCheckBox("", this);
+    trackSelect->setFixedWidth(trackSelect->sizeHint().width());
     editInfo = new QPushButton(tr("Edit"), this);
     editInfo->setContentsMargins(0,0,0,0);
     // Stacked widget for different views.
@@ -174,11 +175,13 @@ void xEncodingTrackItemWidget::viewOutput(bool autofill) {
         tagName->setText(tr(""));
         trackName->setText(tr("track"));
     }
+    editInfo->setText(tr("Edit"));
     updateEncodedFileName();
 }
 
 void xEncodingTrackItemWidget::viewInput() {
     mainStacked->setCurrentWidget(trackInfo);
+    editInfo->setText(tr("Done"));
     updateEncodedFileName();
 }
 
@@ -195,10 +198,8 @@ void xEncodingTrackItemWidget::toggleViews() {
     // Use button to determine what to show.
     if (editInfo->text() == tr("Edit")) {
         viewInput();
-        editInfo->setText(tr("Done"));
     } else {
         viewOutput();
-        editInfo->setText(tr("Edit"));
     }
 }
 
@@ -249,8 +250,45 @@ void xEncodingTracksWidget::setTracks(const QVector<xAudioFile*>& tracks) {
         audioLayout->addWidget(trackItemWidget);
         encodingTracks[track] = trackItemWidget;
     }
+    updateTabOrder();
     audioLayout->addStretch(10);
     setWidget(audioMain);
+}
+
+void xEncodingTracksWidget::updateTabOrder() {
+    auto noTracks = encodingTracks.count();
+    if (noTracks <= 1) {
+        return;
+    }
+    // Order the track selection check-boxes
+    for (auto i = 1; i < noTracks; ++i) {
+        setTabOrder(encodingTracks[i-1]->trackSelect, encodingTracks[i]->trackSelect);
+    }
+    // Transition to artist name and then order artist name.
+    setTabOrder(encodingTracks[noTracks-1]->trackSelect, encodingTracks[0]->artistName);
+    for (auto i = 1; i < noTracks; ++i) {
+        setTabOrder(encodingTracks[i-1]->artistName, encodingTracks[i]->artistName);
+    }
+    // Transition to album name and then order album name.
+    setTabOrder(encodingTracks[noTracks-1]->artistName, encodingTracks[0]->albumName);
+    for (auto i = 1; i < noTracks; ++i) {
+        setTabOrder(encodingTracks[i-1]->albumName, encodingTracks[i]->albumName);
+    }
+    // Transition to tag name and then order tag name.
+    setTabOrder(encodingTracks[noTracks-1]->albumName, encodingTracks[0]->tagName);
+    for (auto i = 1; i < noTracks; ++i) {
+        setTabOrder(encodingTracks[i-1]->tagName, encodingTracks[i]->tagName);
+    }
+    // Transition to nr and then order nr.
+    setTabOrder(encodingTracks[noTracks-1]->tagName, encodingTracks[0]->trackNr);
+    for (auto i = 1; i < noTracks; ++i) {
+        setTabOrder(encodingTracks[i-1]->trackNr, encodingTracks[i]->trackNr);
+    }
+    // Transition to track name and then order track name.
+    setTabOrder(encodingTracks[noTracks-1]->trackNr, encodingTracks[0]->trackName);
+    for (auto i = 1; i < noTracks; ++i) {
+        setTabOrder(encodingTracks[i-1]->trackName, encodingTracks[i]->trackName);
+    }
 }
 
 void xEncodingTracksWidget::setEncodedFormat(const QString& format) {

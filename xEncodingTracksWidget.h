@@ -27,6 +27,7 @@
 #include <QLabel>
 #include <QWidget>
 
+class xEncodingTracksWidget;
 
 class xEncodingTrackItemWidget:public QWidget {
     Q_OBJECT
@@ -161,6 +162,9 @@ private slots:
     void toggleViews();
 
 private:
+    // Grant access in order to allow for changing the focus order.
+    friend xEncodingTracksWidget;
+
     xAudioFile* audioFile;
     QString encodedFormat;
     QPushButton* editInfo;
@@ -255,6 +259,11 @@ public slots:
     void ripProgress(int track, int progress);
 
 private:
+    /**
+     * Change focus order for cycling through with Tab and Shift+Tab.
+     */
+    void updateTabOrder();
+
     int audioTracksOffset;
     QWidget* audioMain;
     QVBoxLayout* audioLayout;

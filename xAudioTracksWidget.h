@@ -26,6 +26,7 @@
 #include <QLabel>
 #include <QWidget>
 
+class xAudioTracksWidget;
 
 class xAudioTrackItemWidget:public QWidget {
     Q_OBJECT
@@ -114,6 +115,9 @@ public:
     void ripProgress(int progress);
 
 private:
+    // we grant access in order to change behavior on keys Tab and Shift+Tab.
+    friend xAudioTracksWidget;
+
     int audioTrackNr;
     int audioTrackOffset;
     QCheckBox* trackSelect;
@@ -199,6 +203,10 @@ public slots:
     void ripProgress(int track, int progress);
 
 private:
+    /**
+     * Change focus order for cycling through with Tab and Shift+Tab.
+     */
+    void updateTabOrder();
     /**
      * Convert the time in ms to a human readable time string.
      *

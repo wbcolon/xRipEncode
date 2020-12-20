@@ -168,8 +168,30 @@ void xAudioTracksWidget::setTracks(int tracks) {
         audioLayout->addWidget(trackItemWidget);
         audioTracks[track] = trackItemWidget;
     }
+    updateTabOrder();
     audioLayout->addStretch(10);
     setWidget(audioMain);
+}
+
+void xAudioTracksWidget::updateTabOrder() {
+    auto noTracks = audioTracks.count();
+    if (noTracks <= 1) {
+        return;
+    }
+    // Order the check-boxes
+    for (auto i = 1; i < noTracks; ++i) {
+        setTabOrder(audioTracks[i-1]->trackSelect, audioTracks[i]->trackSelect);
+    }
+    // Transition to nr and then order nr.
+    setTabOrder(audioTracks[noTracks-1]->trackSelect, audioTracks[0]->trackNr);
+    for (auto i = 1; i < noTracks; ++i) {
+        setTabOrder(audioTracks[i-1]->trackNr, audioTracks[i]->trackNr);
+    }
+    // Transition to name and then order name.
+    setTabOrder(audioTracks[noTracks-1]->trackNr, audioTracks[0]->trackName);
+    for (auto i = 1; i < noTracks; ++i) {
+        setTabOrder(audioTracks[i-1]->trackName, audioTracks[i]->trackName);
+    }
 }
 
 void xAudioTracksWidget::selectAll() {
