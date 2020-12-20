@@ -19,6 +19,7 @@
 #include <QGroupBox>
 #include <QComboBox>
 #include <QDebug>
+#include <QRandomGenerator>
 
 xMainAudioCDWidget::xMainAudioCDWidget(QWidget *parent, Qt::WindowFlags flags):
         QWidget(parent, flags),
@@ -200,7 +201,10 @@ void xMainAudioCDWidget::detect() {
         // Clear in album and artist.
         audioCDArtistName->clear();
         audioCDAlbumName->clear();
+        // Reset musicbrainz lookup.
         audioCDLookupResults->clear();
+        // Reset offset.
+        audioCDTrackOffset->setValue(0);
         // Fill in an item for each track on the audio CD.
         audioTracks->setTracks(audioCD->getTracks());
         // Fill in the times.
@@ -215,7 +219,10 @@ void xMainAudioCDWidget::eject() {
     audioTracks->clear();
     audioCDArtistName->clear();
     audioCDAlbumName->clear();
+    // Reset musicbrainz lookup.
     audioCDLookupResults->clear();
+    // Reset offset.
+    audioCDTrackOffset->setValue(0);
     audioCD->eject();
 }
 
@@ -226,6 +233,7 @@ void xMainAudioCDWidget::rip() {
         consoleText->append("No tracks selected.");
         return;
     }
+    // Update the UI. Only have "cancel rip" enabled.
     audioCDAlbumName->setEnabled(false);
     audioCDArtistName->setEnabled(false);
     audioCDDetectButton->setEnabled(false);
@@ -267,6 +275,7 @@ void xMainAudioCDWidget::ripError(int track, const QString& error, bool abort) {
 }
 
 void xMainAudioCDWidget::ripFinished() {
+    // Enable UI elements again.
     audioCDAlbumName->setEnabled(true);
     audioCDArtistName->setEnabled(true);
     audioCDDetectButton->setEnabled(true);
@@ -280,10 +289,12 @@ void xMainAudioCDWidget::ripFinished() {
     audioCDReplaceView->setEnabled(true);
     audioTracksSelectButton->setEnabled(true);
     audioTracksRipButton->setEnabled(true);
+    // Disable "cancel rip" button again.
     audioTracksRipCancelButton->setEnabled(false);
 }
 
 QList<xAudioFile*> xMainAudioCDWidget::getTracks() {
+    auto jobId = QRandomGenerator::global()->generate64();
     auto selectedTracks = audioTracks->isSelected();
     auto artistName = audioCDArtistName->text();
     auto albumName = audioCDAlbumName->text();
@@ -300,7 +311,7 @@ QList<xAudioFile*> xMainAudioCDWidget::getTracks() {
         trackFileFormat.replace("(trackname)", std::get<2>(track));
         trackFileFormat.append(".wav");
         tracks.push_back(new xAudioFile(tempDirectory+"/"+trackFileFormat, std::get<0>(track), artistName,
-                                        albumName, std::get<1>(track), std::get<2>(track), tagName, 0));
+                                        albumName, std::get<1>(track), std::get<2>(track), tagName, 0, jobId));
     }
     return tracks;
 }

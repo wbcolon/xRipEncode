@@ -74,10 +74,12 @@ public:
      * @param trackName the track name as string.
      * @param tag the additional tag as string.
      * @param tagId the corresponding tag ID.
+     * @param id the job Id the audio file belongs to.
      * @param parent pointer to the parent object.
      */
     xAudioFile(const QString& fileName, int audioTrackNr, const QString& artist, const QString& album,
-               const QString& trackNr, const QString& trackName, const QString& tag, int tagId, QObject* parent=nullptr);
+               const QString& trackNr, const QString& trackName, const QString& tag, int tagId,
+               quint64 id, QObject* parent=nullptr);
     /**
      * Copy constructor.
      *
@@ -137,6 +139,12 @@ public:
      */
     [[nodiscard]] int getTagId() const;
     /**
+     * Get the job ID the audio file belongs to.
+     *
+     * @return the job ID as integer.
+     */
+    [[nodiscard]] quint64 getJobId() const;
+    /**
      * Encode the audio file into a wavpack file. No tags.
      *
      * @param wavPackFileName the name of the wavpack output file.
@@ -178,6 +186,7 @@ private:
     QString encodingTag;
     int encodingTagId;
     QProcess* process;
+    quint64 jobId;
 };
 
 Q_DECLARE_METATYPE(xAudioFile)

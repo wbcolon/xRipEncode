@@ -50,11 +50,13 @@ xAudioFile::xAudioFile():
         encodingTrackName(),
         encodingTag(),
         encodingTagId(-1),
-        process(nullptr) {
+        process(nullptr),
+        jobId(0) {
 }
 
 xAudioFile::xAudioFile(const QString& fileName, int audioTrackNr, const QString& artist, const QString& album,
-                       const QString& trackNr, const QString& trackName, const QString& tag, int tagId, QObject* parent):
+                       const QString& trackNr, const QString& trackName, const QString& tag, int tagId,
+                       quint64 id, QObject* parent):
         QObject(parent),
         inputFileName(fileName),
         inputAudioTrackNr(audioTrackNr),
@@ -64,7 +66,8 @@ xAudioFile::xAudioFile(const QString& fileName, int audioTrackNr, const QString&
         encodingTrackName(trackName),
         encodingTag(tag),
         encodingTagId(tagId),
-        process(nullptr) {
+        process(nullptr),
+        jobId(id) {
 }
 
 xAudioFile::xAudioFile(const xAudioFile& copy):
@@ -77,7 +80,8 @@ xAudioFile::xAudioFile(const xAudioFile& copy):
         encodingTrackName(copy.encodingTrackName),
         encodingTag(copy.encodingTag),
         encodingTagId(copy.encodingTagId),
-        process(nullptr) {
+        process(nullptr),
+        jobId(copy.jobId) {
 }
 
 xAudioFile::~xAudioFile() noexcept {
@@ -191,6 +195,10 @@ const QString& xAudioFile::getTag() const {
 
 int xAudioFile::getTagId() const {
     return encodingTagId;
+}
+
+quint64 xAudioFile::getJobId() const {
+    return jobId;
 }
 
 void xAudioFile::processEncodeOutput() {

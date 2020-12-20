@@ -20,6 +20,7 @@
 #include <QLabel>
 #include <QGroupBox>
 #include <QComboBox>
+#include <QRandomGenerator>
 #include <QDebug>
 
 xMainMovieFileWidget::xMainMovieFileWidget(QWidget *parent, Qt::WindowFlags flags):
@@ -114,7 +115,7 @@ xMainMovieFileWidget::xMainMovieFileWidget(QWidget *parent, Qt::WindowFlags flag
     connect(movieFile, &xMovieFile::audioFiles, this, &xMainMovieFileWidget::audioFiles);
     // Connect buttons.
     connect(movieFileDialogButton, &QPushButton::pressed, this, &xMainMovieFileWidget::openFile);
-    connect(movieFileAnalyzeButton, &QPushButton::pressed, [=]() { movieFile->analyze(movieFileName->text()); } );
+    connect(movieFileAnalyzeButton, &QPushButton::pressed, this, &xMainMovieFileWidget::analyze);
     connect(movieFileAutofillButton, &QPushButton::pressed, this, &xMainMovieFileWidget::autofill);
     connect(movieAudioTracksSelectButton, &QPushButton::pressed, movieAudioTracks, &xAudioTracksWidget::selectAll);
     connect(movieAudioTracksRipButton, &QPushButton::pressed, this, &xMainMovieFileWidget::rip);
@@ -137,12 +138,6 @@ void xMainMovieFileWidget::artistOrAlbumChanged(const QString& text) {
     }
 }
 
-void xMainMovieFileWidget::autofill() {
-    movieFileArtistName->setText(tr("artist"));
-    movieFileAlbumName->setText(tr("album"));
-    movieAudioTracks->autofill();
-}
-
 void xMainMovieFileWidget::openFile() {
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open Movie File"),
                                                     QDir::cleanPath(movieFile->getFileName()),
@@ -150,6 +145,20 @@ void xMainMovieFileWidget::openFile() {
     if (!fileName.isEmpty()) {
         movieFileName->setText(fileName);
     }
+}
+
+void xMainMovieFileWidget::analyze() {
+    // Reset artist, album and track offset on analyzing the file.
+    movieFileArtistName->clear();
+    movieFileAlbumName->clear();
+    movieFileTrackOffset->setValue(0);
+    movieFile->analyze(movieFileName->text());
+}
+
+void xMainMovieFileWidget::autofill() {
+    movieFileArtistName->setText(tr("artist"));
+    movieFileAlbumName->setText(tr("album"));
+    movieAudioTracks->autofill();
 }
 
 void xMainMovieFileWidget::audioStreamInfos(const QStringList& infos) {
@@ -179,11 +188,15 @@ void xMainMovieFileWidget::audioStreamInfoSelection() {
 }
 
 void xMainMovieFileWidget::trackLengths(const QVector<qint64>& lengths) {
+    movieAudioTracks->setEnabled(true);
+    movieAudioTracksSelectButton->setEnabled(true);
+    movieAudioTracksRipButton->setEnabled(true);
     movieAudioTracks->setTracks(lengths.count());
     movieAudioTracks->setTrackLengths(lengths);
 }
 
 void xMainMovieFileWidget::rip() {
+    auto jobId = QRandomGenerator::global()->generate64();
     auto audioStreams = movieFileAudioStreamInfos->selectedItems();
     auto downMix = movieFileAudioDownMix->isChecked();
     auto tags = xRipEncodeConfiguration::configuration()->getTags();
@@ -193,21 +206,21 @@ void xMainMovieFileWidget::rip() {
         auto audioStreamInfo = movieFile->getAudioStreamInfo(audioStreamIndex);
         if (audioStreamInfo.channels > 2) {
             if (audioStreamInfo.bitsPerSample > 16) {
-                movieFile->queueRip(getAudioFiles(tags[3].arg(audioStreamInfo.channels-1), 3), audioStreamIndex, false);
+                movieFile->queueRip(getAudioFiles(tags[3].arg(audioStreamInfo.channels-1), 3, jobId), audioStreamIndex, false);
                 if (downMix) {
-                    movieFile->queueRip(getAudioFiles(tags[1], 1), audioStreamIndex, true);
+                    movieFile->queueRip(getAudioFiles(tags[1], 1, jobId), audioStreamIndex, true);
                 }
             } else {
-                movieFile->queueRip(getAudioFiles(tags[2].arg(audioStreamInfo.channels-1), 2), audioStreamIndex, false);
+                movieFile->queueRip(getAudioFiles(tags[2].arg(audioStreamInfo.channels-1), 2, jobId), audioStreamIndex, false);
                 if (downMix) {
-                    movieFile->queueRip(getAudioFiles(tags[0], 0), audioStreamIndex, true);
+                    movieFile->queueRip(getAudioFiles(tags[0], 0, jobId), audioStreamIndex, true);
                 }
             }
         } else {
             if (audioStreamInfo.bitsPerSample > 16) {
-                movieFile->queueRip(getAudioFiles(tags[1], 1), audioStreamIndex, false);
+                movieFile->queueRip(getAudioFiles(tags[1], 1, jobId), audioStreamIndex, false);
             } else {
-                movieFile->queueRip(getAudioFiles(tags[0], 0), audioStreamIndex, false);
+                movieFile->queueRip(getAudioFiles(tags[0], 0, jobId), audioStreamIndex, false);
             }
         }
     }
@@ -221,6 +234,7 @@ void xMainMovieFileWidget::rip() {
     movieFileAudioStreamInfos->setEnabled(false);
     movieAudioTracksSelectButton->setEnabled(false);
     movieAudioTracksRipButton->setEnabled(false);
+    // Only enable "cancel rip" button.
     movieAudioTracksRipCancelButton->setEnabled(true);
     // Start rip thread.
     movieFile->start();
@@ -258,16 +272,18 @@ void xMainMovieFileWidget::ripFinished() {
     movieFileAnalyzeButton->setEnabled(true);
     movieFileAudioStreamInfos->setEnabled(true);
     movieAudioTracksSelectButton->setEnabled(true);
-    movieAudioTracksRipButton->setEnabled(true);
+    // Disable the entire audio tracks view. Need to analyze before enabling.
+    movieAudioTracksSelectButton->setEnabled(false);
     movieAudioTracksRipCancelButton->setEnabled(false);
+    movieAudioTracksRipButton->setEnabled(false);
+    movieAudioTracks->setEnabled(false);
 }
 
 void xMainMovieFileWidget::messages(const QString& msg) {
     consoleText->append(msg);
 }
 
-QList<xAudioFile*> xMainMovieFileWidget::getAudioFiles(const QString& tag, int tagId) {
-    QList<xAudioFile*> files;
+QList<xAudioFile*> xMainMovieFileWidget::getAudioFiles(const QString& tag, int tagId, quint64 jobId) {
     auto selectedTracks = movieAudioTracks->isSelected();
     auto artistName = movieFileArtistName->text();
     auto albumName = movieFileAlbumName->text();
@@ -277,13 +293,14 @@ QList<xAudioFile*> xMainMovieFileWidget::getAudioFiles(const QString& tag, int t
     fileFormat.replace("(album)", albumName);
     // The tag should contain any separators such as a space.
     fileFormat.replace("(tag)", tag);
+    QList<xAudioFile*> files;
     for (const auto& track : selectedTracks) {
         auto trackFileFormat = fileFormat;
         trackFileFormat.replace("(tracknr)", std::get<1>(track));
         trackFileFormat.replace("(trackname)", std::get<2>(track));
         trackFileFormat.append(".wav");
         files.push_back(new xAudioFile(tempDirectory+"/"+trackFileFormat, std::get<0>(track), artistName,
-                                       albumName, std::get<1>(track), std::get<2>(track), tag, tagId));
+                                       albumName, std::get<1>(track), std::get<2>(track), tag, tagId, jobId));
     }
     return files;
 }

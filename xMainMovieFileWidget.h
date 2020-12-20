@@ -61,6 +61,10 @@ private slots:
      */
     void openFile();
     /**
+     * Analzye the currently selected movie file.
+     */
+    void analyze();
+    /**
      * Autofill the artist/album/tracks with generic names.
      */
     void autofill();
@@ -120,9 +124,10 @@ private:
      *
      * @param tag the HD/multi-channel tag to be used.
      * @param tagId the corresponding tag ID.
+     * @param jobId the job ID the files belong to.
      * @return a list of audio file objects containing the necessary information.
      */
-    QList<xAudioFile*> getAudioFiles(const QString& tag, int tagId);
+    QList<xAudioFile*> getAudioFiles(const QString& tag, int tagId, quint64 jobId);
 
     QLineEdit* movieFileArtistName;
     QLineEdit* movieFileAlbumName;
