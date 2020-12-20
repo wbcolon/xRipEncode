@@ -214,6 +214,7 @@ void xMainEncodingWidget::clear() {
             delete audioFile;
         }
         encodingAudioFiles[currentIndex].clear();
+        encodingTracksTab->setTabEnabled(currentIndex, false);
     }
 }
 
@@ -227,6 +228,7 @@ void xMainEncodingWidget::updateEncodedFileNames() {
 void xMainEncodingWidget::createEncodingTracksWidgets() {
     for (auto i = 0; i < encodingTracksWidgets.count(); ++i) {
         if (encodingAudioFiles[i].count() > 0) {
+            encodingTracksTab->setTabEnabled(i, true);
             encodingTracksWidgets[i]->setTracks(encodingAudioFiles[i]);
         } else {
             encodingTracksTab->setTabEnabled(i, false);
