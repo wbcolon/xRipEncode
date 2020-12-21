@@ -19,6 +19,7 @@
 #include "xEncodingTracksWidget.h"
 #include <QTabWidget>
 #include <QRadioButton>
+#include <QCheckBox>
 #include <QWidget>
 
 class xMainEncodingWidget:public QWidget {
@@ -97,19 +98,23 @@ private:
     void createEncodingTracksWidgets();
 
     QVector<QVector<xAudioFile*>> encodingAudioFiles;
-    QVector<xEncodingTracksWidget*> encodingTracksWidgets;
-    QTabWidget* encodingTracksTab;
     QLineEdit* formatEncodingFormatInput;
     QLineEdit* formatFileFormatInput;
-    QPushButton* encodeSelectAllButton;
-    QPushButton* encodeDeselectAllButton;
-    QPushButton* encodeEditAllButton;
-    QPushButton* encodeOutputAllButton;
+    QCheckBox* updateArtistCheck;
+    QCheckBox* updateAlbumCheck;
+    QCheckBox* updateTagCheck;
+    QCheckBox* updateTrackNrCheck;
     QPushButton* encodeBackupButton;
     QPushButton* encodeEncodeButton;
     QPushButton* encodeClearButton;
     QRadioButton* encodeUseEncodingButton;
     QRadioButton* encodeUseFileButton;
+    QPushButton* encodingSelectAllButton;
+    QPushButton* encodingDeselectAllButton;
+    QPushButton* encodingEditAllButton;
+    QPushButton* encodingOutputAllButton;
+    QTabWidget* encodingTracksTab;
+    QVector<xEncodingTracksWidget*> encodingTracksWidgets;
     xAudioFileEncoding* encoding;
 };
 

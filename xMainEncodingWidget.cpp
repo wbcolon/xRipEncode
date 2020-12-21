@@ -42,15 +42,27 @@ xMainEncodingWidget::xMainEncodingWidget(QWidget *parent, Qt::WindowFlags flags)
     formatLayout->addWidget(formatFileFormatLabel, 2, 0, 1, 4);
     formatLayout->addWidget(formatFileFormatInput, 3, 0, 1, 4);
     formatBox->setLayout(formatLayout);
+    // Create smart update box.
+    auto updateBox = new QGroupBox(tr("Smart Update"), this);
+    auto updateLayout = new QGridLayout();
+    updateArtistCheck = new QCheckBox(tr("Artist"), updateBox);
+    updateArtistCheck->setChecked(true);
+    updateAlbumCheck = new QCheckBox(tr("Album"), updateBox);
+    updateAlbumCheck->setChecked(true);
+    updateTagCheck = new QCheckBox(tr("Tag"), updateBox);
+    updateTagCheck->setChecked(true);
+    updateTrackNrCheck = new QCheckBox(tr("Track Number"), updateBox);
+    updateTrackNrCheck->setChecked(true);
+    updateLayout->addWidget(updateArtistCheck, 0, 0);
+    updateLayout->addWidget(updateAlbumCheck, 1, 0);
+    updateLayout->addWidget(updateTagCheck, 2, 0);
+    updateLayout->addWidget(updateTrackNrCheck, 3, 0);
+    updateBox->setLayout(updateLayout);
     // Create encode box.
     auto encodeBox = new QGroupBox(tr("Encode"), this);
     auto encodeLayout = new QGridLayout();
     encodeUseEncodingButton =  new QRadioButton(tr("Use Encoding Format"), encodeBox);
     encodeUseFileButton =  new QRadioButton(tr("Use File Format"), encodeBox);
-    encodeSelectAllButton = new QPushButton(tr("Select All"), encodeBox);
-    encodeDeselectAllButton = new QPushButton(tr("Deselect All"), encodeBox);
-    encodeEditAllButton = new QPushButton(tr("Edit All"), encodeBox);
-    encodeOutputAllButton = new QPushButton(tr("Output All"), encodeBox);
     encodeBackupButton = new QPushButton(tr("Backup"), encodeBox);
     encodeEncodeButton = new QPushButton(tr("Encode"), encodeBox);
     encodeClearButton = new QPushButton(tr("Clear"), encodeBox);
@@ -58,52 +70,70 @@ xMainEncodingWidget::xMainEncodingWidget(QWidget *parent, Qt::WindowFlags flags)
     encodeLayout->addWidget(encodeUseFileButton, 1, 0, 1, 2);
     encodeLayout->setRowMinimumHeight(2, 50);
     encodeLayout->setRowStretch(2, 0);
-    encodeLayout->addWidget(encodeEditAllButton, 3, 0);
-    encodeLayout->addWidget(encodeOutputAllButton, 3, 1);
-    encodeLayout->setRowMinimumHeight(4, 20);
-    encodeLayout->setRowStretch(4, 0);
-    encodeLayout->addWidget(encodeSelectAllButton, 5, 0);
-    encodeLayout->addWidget(encodeDeselectAllButton, 5, 1);
-    encodeLayout->setRowMinimumHeight(6, 50);
-    encodeLayout->setRowStretch(6, 0);
-    encodeLayout->addWidget(encodeEncodeButton, 7, 0, 1, 2);
-    encodeLayout->addWidget(encodeBackupButton, 8, 0, 1, 2);
-    encodeLayout->setRowMinimumHeight(9, 20);
-    encodeLayout->setRowStretch(9, 0);
-    encodeLayout->addWidget(encodeClearButton, 10, 0, 1, 2);
+    encodeLayout->addWidget(encodeEncodeButton, 3, 0, 1, 2);
+    encodeLayout->addWidget(encodeBackupButton, 4, 0, 1, 2);
+    encodeLayout->setRowMinimumHeight(5, 20);
+    encodeLayout->setRowStretch(5, 0);
+    encodeLayout->addWidget(encodeClearButton, 6, 0, 1, 2);
     encodeUseEncodingButton->setChecked(true);
     encodeBox->setLayout(encodeLayout);
+    // Create encoded tracks box.
+    auto encodingBox = new QGroupBox(tr("Encoding Tracks"), this);
+    auto encodingLayout = new QGridLayout();
+    encodingSelectAllButton = new QPushButton(tr("Select All"), encodingBox);
+    encodingDeselectAllButton = new QPushButton(tr("Deselect All"), encodingBox);
+    encodingEditAllButton = new QPushButton(tr("Edit All"), encodingBox);
+    encodingOutputAllButton = new QPushButton(tr("Output All"), encodingBox);
     // Resize according to tags.
     auto tagInfos = xRipEncodeConfiguration::configuration()->getTagInfos();
     encodingAudioFiles.resize(tagInfos.count());
     encodingTracksWidgets.resize(tagInfos.count());
-    encodingTracksTab = new QTabWidget(this);
+    encodingTracksTab = new QTabWidget(encodingBox);
+    encodingTracksTab->setTabPosition(QTabWidget::West);
     for (auto i = 0; i < tagInfos.count(); ++i) {
         encodingTracksWidgets[i] = new xEncodingTracksWidget(encodingTracksTab);
+        // Default setup for smart update.
+        encodingTracksWidgets[i]->setUpdateArtist(true);
+        encodingTracksWidgets[i]->setUpdateAlbum(true);
+        encodingTracksWidgets[i]->setUpdateTag(true);
+        encodingTracksWidgets[i]->setUpdateTrackNr(true);
+        // Connect check boxes to each of the tracks widgets
+        connect(updateArtistCheck, &QCheckBox::clicked, encodingTracksWidgets[i], &xEncodingTracksWidget::setUpdateArtist);
+        connect(updateAlbumCheck, &QCheckBox::clicked, encodingTracksWidgets[i], &xEncodingTracksWidget::setUpdateAlbum);
+        connect(updateTagCheck, &QCheckBox::clicked, encodingTracksWidgets[i], &xEncodingTracksWidget::setUpdateTag);
+        connect(updateTrackNrCheck, &QCheckBox::clicked, encodingTracksWidgets[i], &xEncodingTracksWidget::setUpdateTrackNr);
+        // Add tab.
         encodingTracksTab->addTab(encodingTracksWidgets[i], tagInfos[i]);
     }
+    encodingLayout->addWidget(encodingSelectAllButton, 0, 0);
+    encodingLayout->addWidget(encodingDeselectAllButton, 0, 1);
+    encodingLayout->addWidget(encodingTracksTab, 1, 0, 8, 2);
+    encodingLayout->addWidget(encodingOutputAllButton, 9, 0);
+    encodingLayout->addWidget(encodingEditAllButton, 9, 1);
+    encodingBox->setLayout(encodingLayout);
     // Setup main layout
     mainLayout->addWidget(formatBox, 0, 0, 2, 2);
     mainLayout->setRowMinimumHeight(2, 20);
     mainLayout->setRowStretch(2, 0);
-    mainLayout->addWidget(encodeBox, 3, 0, 6, 2);
+    mainLayout->addWidget(updateBox, 3, 0, 2, 2);
+    mainLayout->setRowMinimumHeight(5, 20);
+    mainLayout->setRowStretch(5, 0);
+    mainLayout->addWidget(encodeBox, 6, 0, 3, 2);
     mainLayout->setRowStretch(10, 2);
-    mainLayout->setColumnMinimumWidth(3, 20);
-    mainLayout->setColumnStretch(3, 0);
-    mainLayout->addWidget(encodingTracksTab, 0, 4, 11, 6);
+    mainLayout->addWidget(encodingBox, 0, 3, 11, 7);
     // Fill in configuration.
     formatEncodingFormatInput->setText(xRipEncodeConfiguration::configuration()->getEncodingFormat());
     formatFileFormatInput->setText(xRipEncodeConfiguration::configuration()->getFileNameFormat());
     // Connect buttons.
-    connect(encodeEditAllButton, &QPushButton::pressed, this, &xMainEncodingWidget::editAll);
-    connect(encodeOutputAllButton, &QPushButton::pressed, this, &xMainEncodingWidget::outputAll);
-    connect(encodeSelectAllButton, &QPushButton::pressed, this, &xMainEncodingWidget::selectAll);
-    connect(encodeDeselectAllButton, &QPushButton::pressed, this, &xMainEncodingWidget::deselectAll);
     connect(encodeEncodeButton, &QPushButton::pressed, this, &xMainEncodingWidget::encode);
     connect(encodeBackupButton, &QPushButton::pressed, this, &xMainEncodingWidget::backup);
     connect(encodeClearButton, &QPushButton::pressed, this, &xMainEncodingWidget::clear);
     connect(encodeUseEncodingButton, &QRadioButton::clicked, this, &xMainEncodingWidget::updateEncodedFileNames);
     connect(encodeUseFileButton, &QRadioButton::clicked, this, &xMainEncodingWidget::updateEncodedFileNames);
+    connect(encodingEditAllButton, &QPushButton::pressed, this, &xMainEncodingWidget::editAll);
+    connect(encodingOutputAllButton, &QPushButton::pressed, this, &xMainEncodingWidget::outputAll);
+    connect(encodingSelectAllButton, &QPushButton::pressed, this, &xMainEncodingWidget::selectAll);
+    connect(encodingDeselectAllButton, &QPushButton::pressed, this, &xMainEncodingWidget::deselectAll);
 }
 
 xMainEncodingWidget::~xMainEncodingWidget() noexcept {
@@ -117,13 +147,13 @@ xMainEncodingWidget::~xMainEncodingWidget() noexcept {
 void xMainEncodingWidget::setAllEnabled(bool enabled) {
     encodeUseEncodingButton->setEnabled(enabled);
     encodeUseFileButton->setEnabled(enabled);
-    encodeEditAllButton->setEnabled(enabled);
-    encodeOutputAllButton->setEnabled(enabled);
-    encodeSelectAllButton->setEnabled(enabled);
-    encodeDeselectAllButton->setEnabled(enabled);
     encodeEncodeButton->setEnabled(enabled);
     encodeBackupButton->setEnabled(enabled);
     encodeClearButton->setEnabled(enabled);
+    encodingEditAllButton->setEnabled(enabled);
+    encodingOutputAllButton->setEnabled(enabled);
+    encodingSelectAllButton->setEnabled(enabled);
+    encodingDeselectAllButton->setEnabled(enabled);
 }
 
 void xMainEncodingWidget::editAll() {
