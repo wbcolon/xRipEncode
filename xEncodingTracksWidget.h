@@ -63,12 +63,6 @@ public:
      */
     void setTrackNr(const QString& nr);
     /**
-     * Set the offset to actual track or chapter.
-     *
-     * @param offset the offset as integer.
-     */
-    void setTrackNrOffset(int offset);
-    /**
      * Set the track name used in the file name.
      *
      * @param name the new track name as string.
@@ -117,6 +111,12 @@ public:
      */
     [[nodiscard]] QString getEncodedFileName() const;
     /**
+     * Retrieve the job ID the connected audio file belongs to.
+     *
+     * @return the job ID as integer.
+     */
+    [[nodiscard]] quint64 getJobId() const;
+    /**
      * Select/deselect the current track.
      *
      * @param select select if true, deselect otherwise.
@@ -151,7 +151,57 @@ public:
      */
     void ripProgress(int progress);
 
+signals:
+    /**
+     * Signal triggered if artist is updated.
+     *
+     * @param item pointer to the encoding track item.
+     */
+    void updateArtist(xEncodingTrackItemWidget* item);
+    /**
+     * Signal triggered if album is updated.
+     *
+     * @param item pointer to the encoding track item.
+     */
+    void updateAlbum(xEncodingTrackItemWidget* item);
+    /**
+     * Signal triggered if tag is updated.
+     *
+     * @param item pointer to the encoding track item.
+     */
+    void updateTag(xEncodingTrackItemWidget* item);
+    /**
+     * Signal triggered if track number is updated.
+     *
+     * @param item pointer to the encoding track item.
+     */
+    void updateTrackNr(xEncodingTrackItemWidget* item);
+
 private slots:
+    /**
+     * Triggered upon changes in the artist input and emits signal updateArtist.
+     *
+     * @param text the new content of the artist input as string.
+     */
+    void updatedArtist(const QString& text);
+    /**
+     * Triggered upon changes in the album input and emits signal updateAlbum.
+     *
+     * @param text the new content of the album input as string.
+     */
+    void updatedAlbum(const QString& text);
+    /**
+     * Triggered upon changes in the tag input and emits signal updateTag.
+     *
+     * @param text the new content of the tag input as string.
+     */
+    void updatedTag(const QString& text);
+    /**
+     * Triggered upon changes in the track number input and emits signal updateTrackNr.
+     *
+     * @param text the new content of the tag input as string.
+     */
+    void updatedTrackNr(const QString& text);
     /**
      * Update the file name based on the format string and the widgets current input.
      */
@@ -237,12 +287,6 @@ public:
 
 public slots:
     /**
-     * Set the track offset for all tracks.
-     *
-     * @param offset the new offset as integer.
-     */
-    void setTrackOffset(int offset);
-    /**
      * Select all tracks.
      */
     void selectAll();
@@ -251,6 +295,30 @@ public slots:
      */
     void deselectAll();
     /**
+     * Set the mode for the updating the artist within a job ID.
+     *
+     * @param enabled update the artist if true, do not update otherwise.
+     */
+    void setUpdateArtist(bool enabled);
+    /**
+     * Set the mode for the updating the album within a job ID.
+     *
+     * @param enabled update the album if true, do not update otherwise.
+     */
+    void setUpdateAlbum(bool enabled);
+    /**
+     * Set the mode for the updating the tag within a job ID.
+     *
+     * @param enabled update the tag if true, do not update otherwise.
+     */
+    void setUpdateTag(bool enabled);
+    /**
+     * Set the mode for the updating the track number within a job ID.
+     *
+     * @param enabled update the track number if true, do not update otherwise.
+     */
+    void setUpdateTrackNr(bool enabled);
+    /**
      * Update the progress of the rip process.
      *
      * @param track number of the track currently ripped.
@@ -258,16 +326,45 @@ public slots:
      */
     void ripProgress(int track, int progress);
 
+private slots:
+    /**
+     * Perform smart update of the artist for all entries that match its job ID.
+     *
+     * @param item pointer to the encoding track item object updated.
+     */
+    void updateArtist(xEncodingTrackItemWidget* item);
+    /**
+     * Perform smart update of the album for all entries that match its job ID.
+     *
+     * @param item pointer to the encoding track item object updated.
+     */
+    void updateAlbum(xEncodingTrackItemWidget* item);
+    /**
+     * Perform smart update of the tag for all entries that match its job ID.
+     *
+     * @param item pointer to the encoding track item object updated.
+     */
+    void updateTag(xEncodingTrackItemWidget* item);
+    /**
+     * Perform smart update of the track number for all entries that match its job ID.
+     *
+     * @param item pointer to the encoding track item object updated.
+     */
+    void updateTrackNr(xEncodingTrackItemWidget* item);
+
 private:
     /**
      * Change focus order for cycling through with Tab and Shift+Tab.
      */
     void updateTabOrder();
 
-    int audioTracksOffset;
     QWidget* audioMain;
     QVBoxLayout* audioLayout;
     QVector<xEncodingTrackItemWidget*> encodingTracks;
+    bool updateArtistEnabled;
+    bool updateAlbumEnabled;
+    bool updateTagEnabled;
+    bool updateTrackNrEnabled;
 };
 
 #endif

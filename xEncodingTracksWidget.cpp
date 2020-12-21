@@ -18,7 +18,6 @@
 #include <QLineEdit>
 #include <QProgressBar>
 #include <QStackedWidget>
-#include <QLabel>
 #include <QDebug>
 
 xEncodingTrackItemWidget::xEncodingTrackItemWidget(xAudioFile* file, QWidget* parent):
@@ -83,30 +82,43 @@ xEncodingTrackItemWidget::xEncodingTrackItemWidget(xAudioFile* file, QWidget* pa
         setTrackNr(audioFile->getTrackNr());
         setTrackName(audioFile->getTrackName());
     }
+    // Connect changes for line edits for artist, album, tag, and track number.
+    // No lambda function because we want to disconnect for the set functions.
+    connect(artistName, &QLineEdit::textChanged, this, &xEncodingTrackItemWidget::updatedArtist);
+    connect(albumName, &QLineEdit::textChanged, this, &xEncodingTrackItemWidget::updatedAlbum);
+    connect(tagName, &QLineEdit::textChanged, this, &xEncodingTrackItemWidget::updatedTag);
+    connect(trackNr, &QLineEdit::textChanged, this, &xEncodingTrackItemWidget::updatedTrackNr);
 }
 
 void xEncodingTrackItemWidget::setArtist(const QString& artist) {
+    // Do not trigger trigger an updateArtist signal if we set it directly.
+    disconnect(artistName, &QLineEdit::textChanged, this, &xEncodingTrackItemWidget::updatedArtist);
     artistName->setText(artist);
+    connect(artistName, &QLineEdit::textChanged, this, &xEncodingTrackItemWidget::updatedArtist);
     updateEncodedFileName();
 }
 
 void xEncodingTrackItemWidget::setAlbum(const QString& album) {
+    // Do not trigger trigger an updateAlbum signal if we set it directly.
+    disconnect(albumName, &QLineEdit::textChanged, this, &xEncodingTrackItemWidget::updatedAlbum);
     albumName->setText(album);
+    connect(albumName, &QLineEdit::textChanged, this, &xEncodingTrackItemWidget::updatedAlbum);
     updateEncodedFileName();
 }
 
 void xEncodingTrackItemWidget::setTag(const QString& tag) {
+    // Do not trigger trigger an updateTag signal if we set it directly.
+    disconnect(tagName, &QLineEdit::textChanged, this, &xEncodingTrackItemWidget::updatedTag);
     tagName->setText(tag);
-    updateEncodedFileName();
-}
-
-void xEncodingTrackItemWidget::setTrackNrOffset(int offset) {
-    trackNr->setText(QString("%1").arg(audioFile->getTrackNr().toInt()+offset, 2, 10, QChar('0')));
+    connect(tagName, &QLineEdit::textChanged, this, &xEncodingTrackItemWidget::updatedTag);
     updateEncodedFileName();
 }
 
 void xEncodingTrackItemWidget::setTrackNr(const QString& nr) {
+    // Do not trigger trigger an updateTrackNumber signal if we set it directly.
+    disconnect(trackNr, &QLineEdit::textChanged, this, &xEncodingTrackItemWidget::updatedTrackNr);
     trackNr->setText(nr);
+    connect(trackNr, &QLineEdit::textChanged, this, &xEncodingTrackItemWidget::updatedTrackNr);
     updateEncodedFileName();
 }
 
@@ -140,6 +152,14 @@ QString xEncodingTrackItemWidget::getEncodedFileName() const {
     return encodedFileName->text();
 }
 
+quint64 xEncodingTrackItemWidget::getJobId() const {
+    if (audioFile) {
+        return audioFile->getJobId();
+    } else {
+        return 0;
+    }
+}
+
 xAudioFile* xEncodingTrackItemWidget::getAudioFile() const {
     return audioFile;
 }
@@ -155,6 +175,32 @@ bool xEncodingTrackItemWidget::isSelected() const {
 void xEncodingTrackItemWidget::setEncodedFormat(const QString& format) {
    encodedFormat = format;
    updateEncodedFileName();
+}
+
+void xEncodingTrackItemWidget::updatedArtist(const QString& text) {
+    Q_UNUSED(text);
+    // Signal to tracks widget in order to allow for smart artist update.
+    emit updateArtist(this);
+}
+
+void xEncodingTrackItemWidget::updatedAlbum(const QString& text) {
+    Q_UNUSED(text);
+    // Signal to tracks widget in order to allow for smart album update.
+    emit updateAlbum(this);
+}
+
+void xEncodingTrackItemWidget::updatedTag(const QString& text) {
+    Q_UNUSED(text);
+    // Signal to tracks widget in order to allow for smart tag update.
+    emit updateTag(this);
+}
+
+void xEncodingTrackItemWidget::updatedTrackNr(const QString& text) {
+    // Does the text represents a valid integer.
+    if (text.toInt() > 0)  {
+        // Signal to tracks widget in order to allow for smart track number update.
+        emit updateTrackNr(this);
+    }
 }
 
 void xEncodingTrackItemWidget::updateEncodedFileName() {
@@ -203,11 +249,16 @@ void xEncodingTrackItemWidget::toggleViews() {
     }
 }
 
+
+
 xEncodingTracksWidget::xEncodingTracksWidget(QWidget* parent):
         QScrollArea(parent),
-        audioTracksOffset(0),
         audioMain(nullptr),
-        audioLayout(nullptr) {
+        audioLayout(nullptr),
+        updateArtistEnabled(false),
+        updateAlbumEnabled(false),
+        updateTagEnabled(false),
+        updateTrackNrEnabled(false) {
     setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     setWidgetResizable(true);
 }
@@ -224,14 +275,6 @@ void xEncodingTracksWidget::viewInput() {
     }
 }
 
-void xEncodingTracksWidget::setTrackOffset(int offset) {
-    if (offset >= 0) {
-        for (const auto& track : encodingTracks) {
-            track->setTrackNrOffset(offset);
-        }
-    }
-}
-
 void xEncodingTracksWidget::setTracks(const QVector<xAudioFile*>& tracks) {
     // Cleanup.
     for (auto& audioTrack : encodingTracks) {
@@ -245,10 +288,22 @@ void xEncodingTracksWidget::setTracks(const QVector<xAudioFile*>& tracks) {
     audioMain = new QWidget();
     audioLayout = new QVBoxLayout(audioMain);
     audioMain->setLayout(audioLayout);
+    quint64 prevJobId = 0;
     for (int track = 0; track < tracks.count(); ++track) {
         auto trackItemWidget = new xEncodingTrackItemWidget(tracks[track]);
+        // Add a separator if the job Id changes.
+        if ((prevJobId != 0) && (prevJobId != trackItemWidget->getJobId())) {
+            audioLayout->addSpacing(50);
+        }
         audioLayout->addWidget(trackItemWidget);
         encodingTracks[track] = trackItemWidget;
+        // Connect update signals.
+        connect(trackItemWidget, &xEncodingTrackItemWidget::updateArtist, this, &xEncodingTracksWidget::updateArtist);
+        connect(trackItemWidget, &xEncodingTrackItemWidget::updateAlbum, this, &xEncodingTracksWidget::updateAlbum);
+        connect(trackItemWidget, &xEncodingTrackItemWidget::updateTag, this, &xEncodingTracksWidget::updateTag);
+        connect(trackItemWidget, &xEncodingTrackItemWidget::updateTrackNr, this, &xEncodingTracksWidget::updateTrackNr);
+        // Update job ID.
+        prevJobId = trackItemWidget->getJobId();
     }
     updateTabOrder();
     audioLayout->addStretch(10);
@@ -319,6 +374,22 @@ void xEncodingTracksWidget::deselectAll() {
     }
 }
 
+void xEncodingTracksWidget::setUpdateArtist(bool enabled) {
+    updateArtistEnabled = enabled;
+}
+
+void xEncodingTracksWidget::setUpdateAlbum(bool enabled) {
+    updateAlbumEnabled = enabled;
+}
+
+void xEncodingTracksWidget::setUpdateTag(bool enabled) {
+    updateTagEnabled = enabled;
+}
+
+void xEncodingTracksWidget::setUpdateTrackNr(bool enabled) {
+    updateTrackNrEnabled = enabled;
+}
+
 void xEncodingTracksWidget::clear() {
     // Cleanup.
     setTracks(QVector<xAudioFile*>());
@@ -331,3 +402,55 @@ void xEncodingTracksWidget::ripProgress(int track, int progress) {
     }
 }
 
+void xEncodingTracksWidget::updateArtist(xEncodingTrackItemWidget *item) {
+    if (updateArtistEnabled) {
+        auto artist = item->getArtist();
+        auto jobId = item->getJobId();
+        for (auto& tracks : encodingTracks) {
+            if (tracks->getJobId() == jobId) {
+                tracks->setArtist(artist);
+            }
+        }
+    }
+}
+
+void xEncodingTracksWidget::updateAlbum(xEncodingTrackItemWidget *item) {
+    if (updateAlbumEnabled) {
+        auto album = item->getAlbum();
+        auto jobId = item->getJobId();
+        for (auto& tracks : encodingTracks) {
+            if (tracks->getJobId() == jobId) {
+                tracks->setAlbum(album);
+            }
+        }
+    }
+}
+
+void xEncodingTracksWidget::updateTag(xEncodingTrackItemWidget *item) {
+    if (updateTagEnabled) {
+        auto tag = item->getTag();
+        auto jobId = item->getJobId();
+        for (auto& tracks : encodingTracks) {
+            if (tracks->getJobId() == jobId) {
+                tracks->setTag(tag);
+            }
+        }
+    }
+}
+
+void xEncodingTracksWidget::updateTrackNr(xEncodingTrackItemWidget* item) {
+    if (updateTrackNrEnabled) {
+        auto index = encodingTracks.indexOf(item);
+        if ((index >= 0) || (index < encodingTracks.count())) {
+            auto jobId = item->getJobId();
+            auto currentTrackNr = item->getTrackNr().toInt() + 1;
+            for (auto i = index+1; i < encodingTracks.count(); ++i) {
+                if (encodingTracks[i]->getJobId() == jobId) {
+                    encodingTracks[i]->setTrackNr(QString("%1").arg(currentTrackNr++, 2, 10, QChar('0')));
+                } else {
+                    break;
+                }
+            }
+        }
+    }
+}
