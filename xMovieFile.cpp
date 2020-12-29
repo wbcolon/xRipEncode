@@ -22,9 +22,11 @@
 #include <boost/property_tree/json_parser.hpp>
 
 const char* xMovieFile_TemporaryFileBase { "riptmpfile" };
+const QStringList xMovieFile_HighResProfiles { "DTS-HD HRA", "DTS 96/24", "DTS 48/24" };
 
 xMovieFile::xMovieFile(QObject* parent):
-        QThread(parent) {
+        QThread(parent),
+        process(nullptr) {
 }
 
 int xMovieFile::getTracks() const {
@@ -97,7 +99,15 @@ void xMovieFile::analyze(const QString& file) {
         movieFileAudioTrack.sampleRate = childStream.second.get<uint32_t >("sample_rate", 44100);
         movieFileAudioTrack.bitsPerSample = childStream.second.get<uint32_t>("bits_per_sample", 0);
         if (!movieFileAudioTrack.bitsPerSample) {
-            movieFileAudioTrack.bitsPerSample = childStream.second.get<uint32_t>("bits_per_raw_sample", 16);
+            movieFileAudioTrack.bitsPerSample = childStream.second.get<uint32_t>("bits_per_raw_sample", 0);
+            if (!movieFileAudioTrack.bitsPerSample) {
+                // Still no bits per sample found. Resolve by using the profile.
+                if (xMovieFile_HighResProfiles.contains(movieFileAudioTrack.profile, Qt::CaseInsensitive)) {
+                    movieFileAudioTrack.bitsPerSample = 24;
+                } else {
+                    movieFileAudioTrack.bitsPerSample = 16;
+                }
+            }
         }
         movieFileAudioTrack.bitRate = childStream.second.get<uint32_t>("bit_rate", 0);
         movieFileAudioTrack.channels = childStream.second.get<uint32_t>("channels", 2);
