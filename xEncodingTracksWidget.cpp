@@ -178,19 +178,25 @@ void xEncodingTrackItemWidget::setEncodedFormat(const QString& format) {
 }
 
 void xEncodingTrackItemWidget::updatedArtist(const QString& text) {
-    Q_UNUSED(text);
+    auto pos = artistName->cursorPosition();
+    setArtist(text);
+    artistName->setCursorPosition(pos);
     // Signal to tracks widget in order to allow for smart artist update.
     emit updateArtist(this);
 }
 
 void xEncodingTrackItemWidget::updatedAlbum(const QString& text) {
-    Q_UNUSED(text);
+    auto pos = albumName->cursorPosition();
+    setAlbum(text);
+    albumName->setCursorPosition(pos);
     // Signal to tracks widget in order to allow for smart album update.
     emit updateAlbum(this);
 }
 
 void xEncodingTrackItemWidget::updatedTag(const QString& text) {
-    Q_UNUSED(text);
+    auto pos = tagName->cursorPosition();
+    setTag(text);
+    tagName->setCursorPosition(pos);
     // Signal to tracks widget in order to allow for smart tag update.
     emit updateTag(this);
 }
@@ -198,6 +204,9 @@ void xEncodingTrackItemWidget::updatedTag(const QString& text) {
 void xEncodingTrackItemWidget::updatedTrackNr(const QString& text) {
     // Does the text represents a valid integer.
     if (text.toInt() > 0)  {
+        auto pos = trackNr->cursorPosition();
+        setTrackNr(text);
+        trackNr->setCursorPosition(pos);
         // Signal to tracks widget in order to allow for smart track number update.
         emit updateTrackNr(this);
     }
@@ -221,12 +230,14 @@ void xEncodingTrackItemWidget::viewOutput(bool autofill) {
         tagName->setText(tr(""));
         trackName->setText(tr("track"));
     }
+    editInfo->setEnabled(true);
     editInfo->setText(tr("Edit"));
     updateEncodedFileName();
 }
 
 void xEncodingTrackItemWidget::viewInput() {
     mainStacked->setCurrentWidget(trackInfo);
+    editInfo->setEnabled(true);
     editInfo->setText(tr("Done"));
     updateEncodedFileName();
 }
@@ -402,36 +413,39 @@ void xEncodingTracksWidget::ripProgress(int track, int progress) {
     }
 }
 
-void xEncodingTracksWidget::updateArtist(xEncodingTrackItemWidget *item) {
+void xEncodingTracksWidget::updateArtist(xEncodingTrackItemWidget* item) {
     if (updateArtistEnabled) {
         auto artist = item->getArtist();
         auto jobId = item->getJobId();
         for (auto& tracks : encodingTracks) {
-            if (tracks->getJobId() == jobId) {
+            // Update only if job ID matches and if item is the one triggering the event.
+            if ((tracks->getJobId() == jobId) && (tracks != item)) {
                 tracks->setArtist(artist);
             }
         }
     }
 }
 
-void xEncodingTracksWidget::updateAlbum(xEncodingTrackItemWidget *item) {
+void xEncodingTracksWidget::updateAlbum(xEncodingTrackItemWidget* item) {
     if (updateAlbumEnabled) {
         auto album = item->getAlbum();
         auto jobId = item->getJobId();
         for (auto& tracks : encodingTracks) {
-            if (tracks->getJobId() == jobId) {
+            // Update only if job ID matches and if item is the one triggering the event.
+            if ((tracks->getJobId() == jobId) && (tracks != item)) {
                 tracks->setAlbum(album);
             }
         }
     }
 }
 
-void xEncodingTracksWidget::updateTag(xEncodingTrackItemWidget *item) {
+void xEncodingTracksWidget::updateTag(xEncodingTrackItemWidget* item) {
     if (updateTagEnabled) {
         auto tag = item->getTag();
         auto jobId = item->getJobId();
         for (auto& tracks : encodingTracks) {
-            if (tracks->getJobId() == jobId) {
+            // Update only if job ID matches and if item is the one triggering the event.
+            if ((tracks->getJobId() == jobId) && (tracks != item)) {
                 tracks->setTag(tag);
             }
         }
