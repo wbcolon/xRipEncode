@@ -129,6 +129,8 @@ private:
      */
     QList<xAudioFile*> getAudioFiles(const QString& tag, int tagId, quint64 jobId);
 
+    bool isRipButtonEnabled();
+
     QLineEdit* movieFileArtistName;
     QLineEdit* movieFileAlbumName;
     QLineEdit* movieFileName;

@@ -127,6 +127,8 @@ xMainMovieFileWidget::xMainMovieFileWidget(QWidget *parent, Qt::WindowFlags flag
     connect(movieFileAudioStreamInfos, &QListWidget::itemSelectionChanged, this, &xMainMovieFileWidget::audioStreamInfoSelection);
     // Update track offset.
     connect(movieFileTrackOffset, SIGNAL(valueChanged(int)), movieAudioTracks, SLOT(setTrackOffset(int)));
+    // Connect audio track selection updates to rip button.
+    connect(movieAudioTracks, &xAudioTracksWidget::isSelectedUpdate, [=]() { movieAudioTracksRipButton->setEnabled(isRipButtonEnabled()); });
 }
 
 void xMainMovieFileWidget::artistOrAlbumChanged(const QString& text) {
@@ -134,7 +136,7 @@ void xMainMovieFileWidget::artistOrAlbumChanged(const QString& text) {
     if (movieFileArtistName->text().isEmpty() || movieFileAlbumName->text().isEmpty()) {
         movieAudioTracksRipButton->setEnabled(false);
     } else {
-        movieAudioTracksRipButton->setEnabled(movieFileAudioStreamInfos->selectedItems().count() != 0);
+        movieAudioTracksRipButton->setEnabled(isRipButtonEnabled());
     }
 }
 
@@ -174,7 +176,7 @@ void xMainMovieFileWidget::audioStreamInfoSelection() {
     } else {
         movieFileAudioStreamTag->setEnabled(true);
     }
-    movieAudioTracksRipButton->setEnabled(items.count() != 0);
+    movieAudioTracksRipButton->setEnabled(isRipButtonEnabled());
     for (const auto& item : items) {
         auto streamInfo = movieFile->getAudioStreamInfo(movieFileAudioStreamInfos->row(item));
         if (streamInfo.channels > 2) {
@@ -190,9 +192,9 @@ void xMainMovieFileWidget::audioStreamInfoSelection() {
 void xMainMovieFileWidget::trackLengths(const QVector<qint64>& lengths) {
     movieAudioTracks->setEnabled(true);
     movieAudioTracksSelectButton->setEnabled(true);
-    movieAudioTracksRipButton->setEnabled(true);
     movieAudioTracks->setTracks(lengths.count());
     movieAudioTracks->setTrackLengths(lengths);
+    movieAudioTracksRipButton->setEnabled(isRipButtonEnabled());
 }
 
 void xMainMovieFileWidget::rip() {
@@ -284,7 +286,7 @@ void xMainMovieFileWidget::messages(const QString& msg) {
 }
 
 QList<xAudioFile*> xMainMovieFileWidget::getAudioFiles(const QString& tag, int tagId, quint64 jobId) {
-    auto selectedTracks = movieAudioTracks->isSelected();
+    auto selectedTracks = movieAudioTracks->getSelected();
     auto artistName = movieFileArtistName->text();
     auto albumName = movieFileAlbumName->text();
     auto fileFormat = xRipEncodeConfiguration::configuration()->getFileNameFormat();
@@ -303,5 +305,15 @@ QList<xAudioFile*> xMainMovieFileWidget::getAudioFiles(const QString& tag, int t
                                        albumName, std::get<1>(track), std::get<2>(track), tag, tagId, jobId));
     }
     return files;
+}
+
+bool xMainMovieFileWidget::isRipButtonEnabled() {
+    // Only enable rip button if artist and album is non-empty
+    // and the audio streams and tracks are selected.
+    return (movieFileAudioStreamInfos->selectedItems().count() != 0) &&
+           (movieAudioTracks->isSelected()) &&
+           (!movieFileArtistName->text().isEmpty()) &&
+           (!movieFileAlbumName->text().isEmpty()) &&
+           (movieFile->getTracks() > 0);
 }
 

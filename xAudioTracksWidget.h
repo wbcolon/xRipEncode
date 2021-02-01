@@ -114,6 +114,12 @@ public:
      */
     void ripProgress(int progress);
 
+signals:
+    /**
+     * Emitted if this tracks selection changed.
+     */
+    void isSelectedUpdate();
+
 private:
     // we grant access in order to change behavior on keys Tab and Shift+Tab.
     friend xAudioTracksWidget;
@@ -177,11 +183,17 @@ public:
      */
     void clear();
     /**
+     * Return if any of the tracks are selected.
+     *
+     * @return true if one or more tracks are selected, false otherwise.
+     */
+    [[nodiscard]] bool isSelected();
+    /**
      * Return the selected tracks.
      *
      * @return a list of tuples of audio track index, track number and track name.
      */
-    [[nodiscard]] QList<std::tuple<int,QString,QString>> isSelected();
+    [[nodiscard]] QList<std::tuple<int,QString,QString>> getSelected();
 
 public slots:
     /**
@@ -201,6 +213,12 @@ public slots:
      * @param progress the progress for the current track.
      */
     void ripProgress(int track, int progress);
+
+signals:
+    /**
+     * Emitted if audio tracks selection changes.
+     */
+    void isSelectedUpdate();
 
 private:
     /**

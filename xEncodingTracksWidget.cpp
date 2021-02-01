@@ -287,10 +287,13 @@ void xEncodingTracksWidget::viewInput() {
 }
 
 void xEncodingTracksWidget::setTracks(const QVector<xAudioFile*>& tracks) {
-    // Cleanup.
+    // Cleanup the layout. Recycle the track widgets.
+    QVector<xEncodingTrackItemWidget*> currentTracks;
     for (auto& audioTrack : encodingTracks) {
         audioLayout->removeWidget(audioTrack);
-        delete audioTrack;
+        audioTrack->setParent(nullptr);
+        // Store the current track widgets.
+        currentTracks.push_back(audioTrack);
     }
     delete audioLayout;
     delete audioMain;
@@ -301,7 +304,13 @@ void xEncodingTracksWidget::setTracks(const QVector<xAudioFile*>& tracks) {
     audioMain->setLayout(audioLayout);
     quint64 prevJobId = 0;
     for (int track = 0; track < tracks.count(); ++track) {
-        auto trackItemWidget = new xEncodingTrackItemWidget(tracks[track]);
+        xEncodingTrackItemWidget* trackItemWidget;
+        // Reuse the current track widgets.
+        if (track < currentTracks.count()) {
+            trackItemWidget = currentTracks[track];
+        } else {
+            trackItemWidget = new xEncodingTrackItemWidget(tracks[track]);
+        }
         // Add a separator if the job Id changes.
         if ((prevJobId != 0) && (prevJobId != trackItemWidget->getJobId())) {
             audioLayout->addSpacing(50);

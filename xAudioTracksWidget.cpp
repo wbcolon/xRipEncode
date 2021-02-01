@@ -27,6 +27,7 @@ xAudioTrackItemWidget::xAudioTrackItemWidget(int track, int offset, QWidget* par
         audioTrackOffset(offset) {
     auto trackLayout = new QGridLayout(this);
     trackSelect = new QCheckBox("", this);
+    trackSelect->setChecked(false);
     trackNr = new QLineEdit(this);
     trackStacked = new QStackedWidget(this);
     trackProgress = new QProgressBar(trackStacked);
@@ -50,6 +51,8 @@ xAudioTrackItemWidget::xAudioTrackItemWidget(int track, int offset, QWidget* par
     trackLayout->setColumnStretch(1, 0);
     setLayout(trackLayout);
     setFixedHeight(sizeHint().height());
+    // Connect signal to checkbox.
+    connect(trackSelect, &QCheckBox::clicked, this, &xAudioTrackItemWidget::isSelectedUpdate);
 }
 
 int xAudioTrackItemWidget::getAudioTrackNr() const {
@@ -83,6 +86,7 @@ void xAudioTrackItemWidget::setTrackLength(const QString& length) {
 
 void xAudioTrackItemWidget::setSelected(bool select) {
     trackSelect->setChecked(select);
+    emit isSelectedUpdate();
 }
 
 bool xAudioTrackItemWidget::isSelected() const {
@@ -154,6 +158,8 @@ void xAudioTracksWidget::setTracks(int tracks) {
     // Cleanup.
     for (auto& audioTrack : audioTracks) {
         audioLayout->removeWidget(audioTrack);
+        // Disconnect signals.
+        disconnect(audioTrack, &xAudioTrackItemWidget::isSelectedUpdate, this, &xAudioTracksWidget::isSelectedUpdate);
         delete audioTrack;
     }
     delete audioLayout;
@@ -165,6 +171,8 @@ void xAudioTracksWidget::setTracks(int tracks) {
     audioMain->setLayout(audioLayout);
     for (int track = 0; track < tracks; ++track) {
         auto trackItemWidget = new xAudioTrackItemWidget(track+1, audioTracksOffset, audioMain);
+        // Connect individual audio track signals to audio widget signal.
+        connect(trackItemWidget, &xAudioTrackItemWidget::isSelectedUpdate, this, &xAudioTracksWidget::isSelectedUpdate);
         audioLayout->addWidget(trackItemWidget);
         audioTracks[track] = trackItemWidget;
     }
@@ -204,7 +212,15 @@ void xAudioTracksWidget::clear() {
     setTracks(0);
 }
 
-QList<std::tuple<int,QString,QString>> xAudioTracksWidget::isSelected() {
+bool xAudioTracksWidget::isSelected() {
+    for (const auto& audioTrack : audioTracks) {
+        if (audioTrack->isSelected()) {
+            return true;
+        }
+    }
+    return false;
+}
+QList<std::tuple<int,QString,QString>> xAudioTracksWidget::getSelected() {
     QList<std::tuple<int,QString,QString>> selectedTracks;
     for (const auto& audioTrack : audioTracks) {
         if (audioTrack->isSelected()) {

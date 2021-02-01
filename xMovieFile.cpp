@@ -175,6 +175,12 @@ void xMovieFile::processOutput() {
 }
 
 void xMovieFile::run() {
+    // Do extract if track and queue count do not match.
+    if (movieFileTracks.count() != queue.count()) {
+        qCritical() << "Count for movie files and queue do not match: "
+                    << movieFileTracks.count() << "," << queue.count();
+        return;
+    }
     // First we need to split the movie file into tracks.
     movieFilePath = xRipEncodeConfiguration::configuration()->getTempDirectory();
     auto movieFileOutput = movieFilePath + "/" + xMovieFile_TemporaryFileBase;

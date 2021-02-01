@@ -295,7 +295,7 @@ void xMainAudioCDWidget::ripFinished() {
 
 QList<xAudioFile*> xMainAudioCDWidget::getTracks() {
     auto jobId = QRandomGenerator::global()->generate64();
-    auto selectedTracks = audioTracks->isSelected();
+    auto selectedTracks = audioTracks->getSelected();
     auto artistName = audioCDArtistName->text();
     auto albumName = audioCDAlbumName->text();
     auto tagName = xRipEncodeConfiguration::configuration()->getTags().at(0);
