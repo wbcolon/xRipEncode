@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.2 - 2021-02-01
+
+- Fix disappearing changes in encoding view when adding new files.
+- Fix rip button availability.
+- Add sanity check to rip file queue.
+
 ## 0.2.1 - 2020-12-29
 
 - Fix smart update cursor position bug.
