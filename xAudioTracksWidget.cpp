@@ -41,7 +41,6 @@ xAudioTrackItemWidget::xAudioTrackItemWidget(int track, int offset, QWidget* par
     trackNr->setText(QString("%1").arg(audioTrackNr+audioTrackOffset, 2, 10, QChar('0')));
     trackLength = new QLabel(this);
     trackLength->setFixedWidth(trackLength->fontMetrics().boundingRect("01:23:45.678").width());
-    trackLength->setAlignment(Qt::AlignCenter);
     trackLayout->addWidget(trackSelect, 0, 0);
     trackLayout->addWidget(trackNr, 0, 1);
     trackLayout->addWidget(trackStacked, 0, 2, 1, 10);
@@ -81,7 +80,13 @@ QString xAudioTrackItemWidget::getTrackName() const {
 }
 
 void xAudioTrackItemWidget::setTrackLength(const QString& length) {
+    trackLength->setAlignment(Qt::AlignCenter);
     trackLength->setText(length);
+}
+
+void xAudioTrackItemWidget::setTrackSize(const QString& size) {
+    trackLength->setAlignment(Qt::AlignRight);
+    trackLength->setText(size);
 }
 
 void xAudioTrackItemWidget::setSelected(bool select) {
@@ -150,6 +155,14 @@ void xAudioTracksWidget::setTrackLengths(const QVector<qint64>& times) {
     if (times.count() == audioTracks.count()) {
         for (int track = 0; track < audioTracks.count(); ++track) {
             audioTracks[track]->setTrackLength(xAudioTracksWidget::millisecondsToLabel(times[track]));
+        }
+    }
+}
+
+void xAudioTracksWidget::setTrackSizes(const QVector<qint64>& sizes) {
+    if (sizes.count() == audioTracks.count()) {
+        for (int track = 0; track < audioTracks.count(); ++track) {
+            audioTracks[track]->setTrackSize(QString::number(sizes[track]));
         }
     }
 }

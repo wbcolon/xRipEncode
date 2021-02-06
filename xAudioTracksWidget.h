@@ -90,6 +90,12 @@ public:
      */
     void setTrackLength(const QString& length);
     /**
+     * Set the track size for file name.
+     *
+     * @param size the track size as string.
+     */
+    void setTrackSize(const QString& size);
+    /**
      * Select/deselect the current track.
      *
      * @param select select if true, deselect otherwise.
@@ -178,6 +184,12 @@ public:
      * @param lengths a vector of track lengths in ms.
      */
     void setTrackLengths(const QVector<qint64>& lengths);
+    /**
+     * Set the size for each track.
+     *
+     * @param sizes a vector of track sizes in byte.
+     */
+    void setTrackSizes(const QVector<qint64>& sizes);
     /**
      * Clear the widget. Remove all tracks.
      */
