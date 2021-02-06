@@ -310,8 +310,8 @@ QList<xAudioFile*> xMainAudioCDWidget::getTracks() {
         trackFileFormat.replace("(tracknr)", std::get<1>(track));
         trackFileFormat.replace("(trackname)", std::get<2>(track));
         trackFileFormat.append(".wav");
-        tracks.push_back(new xAudioFile(tempDirectory+"/"+trackFileFormat, std::get<0>(track), artistName,
-                                        albumName, std::get<1>(track), std::get<2>(track), tagName, 0, jobId));
+        tracks.push_back(new xAudioFileWav(tempDirectory+"/"+trackFileFormat, std::get<0>(track), artistName,
+                                           albumName, std::get<1>(track), std::get<2>(track), tagName, 0, jobId));
     }
     return tracks;
 }

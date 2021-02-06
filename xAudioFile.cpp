@@ -50,7 +50,6 @@ xAudioFile::xAudioFile():
         encodingTrackName(),
         encodingTag(),
         encodingTagId(-1),
-        process(nullptr),
         jobId(0) {
 }
 
@@ -66,7 +65,6 @@ xAudioFile::xAudioFile(const QString& fileName, int audioTrackNr, const QString&
         encodingTrackName(trackName),
         encodingTag(tag),
         encodingTagId(tagId),
-        process(nullptr),
         jobId(id) {
 }
 
@@ -80,81 +78,11 @@ xAudioFile::xAudioFile(const xAudioFile& copy):
         encodingTrackName(copy.encodingTrackName),
         encodingTag(copy.encodingTag),
         encodingTagId(copy.encodingTagId),
-        process(nullptr),
         jobId(copy.jobId) {
 }
 
 xAudioFile::~xAudioFile() noexcept {
     remove();
-}
-
-bool xAudioFile::encodeWavPack(const QString& wavPackFileName) {
-    // Create directory.
-    auto wavPackFileDirectory = wavPackFileName.left(wavPackFileName.lastIndexOf('/'));
-    try {
-        if (wavPackFileDirectory != wavPackFileName) {
-            qDebug() << "xAudioFile::backupWavPack: create directory: " << wavPackFileDirectory;
-            std::filesystem::create_directories(wavPackFileDirectory.toStdString());
-        }
-    } catch (std::filesystem::filesystem_error& e) {
-        // Ignore errors.
-    }
-    std::filesystem::path wavPackFile(wavPackFileName.toStdString());
-    // Backup file.
-    process = new QProcess(this);
-    process->setProcessChannelMode(QProcess::MergedChannels);
-    connect(process, &QProcess::readyReadStandardOutput, this, &xAudioFile::processBackupOutput);
-    process->start(xRipEncodeConfiguration::configuration()->getWavPack(), { {"-h"}, inputFileName, {"-o"}, wavPackFileName } );
-    qDebug() << "xAudioFile::backupWavPack: process arguments: " << process->arguments();
-    process->waitForFinished(-1);
-    disconnect(process, &QProcess::readyReadStandardOutput, this, &xAudioFile::processBackupOutput);
-    auto exitCode = process->exitCode();
-    delete process;
-    if (exitCode == QProcess::NormalExit) {
-        return true;
-    } else {
-        try {
-            std::filesystem::remove(wavPackFile);
-        } catch (std::filesystem::filesystem_error& e) {
-            qWarning() << "Unable to remove corrupt output file: " << wavPackFileName << ", error: " << e.what() << ", ignoring.";
-        }
-        return false;
-    }
-}
-
-bool xAudioFile::encodeFlac(const QString& flacFileName) {
-    // Create directory.
-    auto flacFileDirectory = flacFileName.left(flacFileName.lastIndexOf('/'));
-    try {
-        if (flacFileDirectory != flacFileName) {
-            qDebug() << "xAudioFile::encodeFlac: create directory: " << flacFileDirectory;
-            std::filesystem::create_directories(flacFileDirectory.toStdString());
-        }
-    } catch (std::filesystem::filesystem_error& e) {
-        // Ignore errors.
-    }
-    // Encode file.
-    process = new QProcess(this);
-    process->setProcessChannelMode(QProcess::MergedChannels);
-    connect(process, &QProcess::readyReadStandardOutput, this, &xAudioFile::processEncodeOutput);
-    process->start(xRipEncodeConfiguration::configuration()->getFlac(), { {"-8"}, {"-f"}, inputFileName,
-                   {"-o"}, flacFileName, { "--tag=ARTIST="+encodingArtist }, { "--tag=ALBUM="+encodingAlbum },
-                   { "--tag=NUMBER="+encodingTrackNr }, { "--tag=TITLE="+encodingTrackName } });
-    qDebug() << "xAudioFile::encodeFlac: process arguments: " << process->arguments();
-    process->waitForFinished(-1);
-    disconnect(process, &QProcess::readyReadStandardOutput, this, &xAudioFile::processEncodeOutput);
-    auto exitCode = process->exitCode();
-    delete process;
-    if (exitCode == QProcess::NormalExit) {
-        return true;
-    } else {
-        try {
-            std::filesystem::remove(flacFileName.toStdString());
-        } catch (std::filesystem::filesystem_error& e) {
-            qWarning() << "Unable to remove corrupt output file: " << flacFileName << ", error: " << e.what() << ", ignoring.";
-        }
-        return false;
-    }
 }
 
 void xAudioFile::remove() {
@@ -201,8 +129,157 @@ quint64 xAudioFile::getJobId() const {
     return jobId;
 }
 
-void xAudioFile::processEncodeOutput() {
+xAudioFileWav::xAudioFileWav():
+        xAudioFile(),
+        process(nullptr) {
 }
 
-void xAudioFile::processBackupOutput() {
+xAudioFileWav::xAudioFileWav(const QString& fileName, int audioTrackNr, const QString& artist, const QString& album,
+                             const QString& trackNr, const QString& trackName, const QString& tag, int tagId,
+                             quint64 id, QObject *parent):
+        xAudioFile(fileName, audioTrackNr, artist, album, trackNr, trackName, tag, tagId, id, parent),
+        process(nullptr) {
 }
+
+xAudioFileWav::xAudioFileWav(const xAudioFileWav& copy):
+        xAudioFile(copy),
+        process(nullptr) {
+}
+
+bool xAudioFileWav::encodeWavPack(const QString& wavPackFileName) {
+    // Create directory.
+    auto wavPackFileDirectory = wavPackFileName.left(wavPackFileName.lastIndexOf('/'));
+    try {
+        if (wavPackFileDirectory != wavPackFileName) {
+            qDebug() << "xAudioFileWav::backupWavPack: create directory: " << wavPackFileDirectory;
+            std::filesystem::create_directories(wavPackFileDirectory.toStdString());
+        }
+    } catch (std::filesystem::filesystem_error& e) {
+        // Ignore errors.
+    }
+    std::filesystem::path wavPackFile(wavPackFileName.toStdString());
+    // Backup file.
+    process = new QProcess();
+    process->setProcessChannelMode(QProcess::MergedChannels);
+    process->start(xRipEncodeConfiguration::configuration()->getWavPack(), { {"-h"}, {"-y"}, inputFileName, {"-o"}, wavPackFileName } );
+    qDebug() << "xAudioFileWav::backupWavPack: process arguments: " << process->arguments();
+    process->waitForFinished(-1);
+    auto exitCode = process->exitCode();
+    auto exitError = process->errorString();
+    delete process;
+    if (exitCode == QProcess::NormalExit) {
+        return true;
+    } else {
+        qCritical() << "xAudioFileWav::encodeWavPack: error: " << exitError;
+        try {
+            std::filesystem::remove(wavPackFile);
+        } catch (std::filesystem::filesystem_error& e) {
+            qWarning() << "Unable to remove corrupt output file: " << wavPackFileName << ", error: " << e.what() << ", ignoring.";
+        }
+        return false;
+    }
+}
+
+bool xAudioFileWav::encodeFlac(const QString& flacFileName) {
+    // Create directory.
+    auto flacFileDirectory = flacFileName.left(flacFileName.lastIndexOf('/'));
+    try {
+        if (flacFileDirectory != flacFileName) {
+            qDebug() << "xAudioFileWav::encodeFlac: create directory: " << flacFileDirectory;
+            std::filesystem::create_directories(flacFileDirectory.toStdString());
+        }
+    } catch (std::filesystem::filesystem_error& e) {
+        // Ignore errors.
+    }
+    // Encode file.
+    process = new QProcess();
+    process->setProcessChannelMode(QProcess::MergedChannels);
+    process->start(xRipEncodeConfiguration::configuration()->getFlac(), { {"-8"}, {"-f"}, inputFileName,
+                                                                          {"-o"}, flacFileName, { "--tag=ARTIST="+encodingArtist }, { "--tag=ALBUM="+encodingAlbum },
+                                                                          { "--tag=NUMBER="+encodingTrackNr }, { "--tag=TITLE="+encodingTrackName } });
+    qDebug() << "xAudioFileWav::encodeFlac: process arguments: " << process->arguments();
+    process->waitForFinished(-1);
+    auto exitCode = process->exitCode();
+    auto exitError = process->errorString();
+    delete process;
+    if (exitCode == QProcess::NormalExit) {
+        return true;
+    } else {
+        qCritical() << "xAudioFileWav::encodeFlac: error: " << exitError;
+        try {
+            std::filesystem::remove(flacFileName.toStdString());
+        } catch (std::filesystem::filesystem_error& e) {
+            qWarning() << "Unable to remove corrupt output file: " << flacFileName << ", error: " << e.what() << ", ignoring.";
+        }
+        return false;
+    }
+}
+
+xAudioFileFlac::xAudioFileFlac():
+        xAudioFile(),
+        process(nullptr) {
+}
+
+xAudioFileFlac::xAudioFileFlac(const QString& fileName, int audioTrackNr, const QString& artist, const QString& album,
+                              const QString& trackNr, const QString& trackName, const QString& tag, int tagId,
+                              quint64 id, QObject *parent):
+        xAudioFile(fileName, audioTrackNr, artist, album, trackNr, trackName, tag, tagId, id, parent),
+        process(nullptr) {
+}
+
+xAudioFileFlac::xAudioFileFlac(const xAudioFileFlac& copy):
+        xAudioFile(copy),
+        process(nullptr) {
+}
+
+bool xAudioFileFlac::encodeWavPack(const QString& wavPackFileName) {
+    // We do not support wavpack encoding to flac files.
+    Q_UNUSED(wavPackFileName)
+    return false;
+}
+
+bool xAudioFileFlac::encodeFlac(const QString& flacFileName) {
+    // Create directory.
+    auto flacFileDirectory = flacFileName.left(flacFileName.lastIndexOf('/'));
+    try {
+        if (flacFileDirectory != flacFileName) {
+            qDebug() << "xAudioFileFlac::encodeFlac: create directory: " << flacFileDirectory;
+            std::filesystem::create_directories(flacFileDirectory.toStdString());
+        }
+    } catch (std::filesystem::filesystem_error& e) {
+        // Ignore errors.
+    }
+    // Copy file.
+    try {
+        qCritical() << "Copy file: " << inputFileName << "to" << flacFileName;
+        std::filesystem::copy(inputFileName.toStdString(), flacFileName.toStdString());
+    } catch (std::filesystem::filesystem_error& e) {
+        qCritical() << "Unable to copy file: " << inputFileName << "to" << flacFileName;
+        return false;
+    }
+    // Tag the target file.
+    process = new QProcess();
+    process->setProcessChannelMode(QProcess::MergedChannels);
+    process->start(xRipEncodeConfiguration::configuration()->getLLTag(), { {"--yes"},
+                                                                          { "--ARTIST"}, encodingArtist, { "--ALBUM" }, encodingAlbum,
+                                                                          { "--NUMBER"}, encodingTrackNr, { "--TITLE" }, encodingTrackName,
+                                                                          flacFileName });
+    qDebug() << "xAudioFileFlac::encodeFlac: process arguments: " << process->arguments();
+    process->waitForFinished(-1);
+    auto exitCode = process->exitCode();
+    auto exitError = process->errorString();
+    delete process;
+    if (exitCode == QProcess::NormalExit) {
+        return true;
+    } else {
+        qCritical() << "xAudioFileFlac::encodeFlac: error: " << exitError;
+        try {
+            std::filesystem::remove(flacFileName.toStdString());
+        } catch (std::filesystem::filesystem_error& e) {
+            qWarning() << "Unable to remove corrupt output file: " << flacFileName << ", error: " << e.what() << ", ignoring.";
+        }
+        return false;
+    }
+}
+
+

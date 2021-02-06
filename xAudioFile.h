@@ -67,7 +67,7 @@ public:
      * Constructor. Create an audio file object connected to a file.
      *
      * @param fileName the absolute path to the file as string.
-     * @param audioTrackNr the track of the audio CD or chapter in the movie file.
+     * @param audioTrackNr the track of the audio CD, chapter in the movie file or file in archive.
      * @param artist the artist name as string.
      * @param album the album name as string.
      * @param trackNr the track number as string
@@ -150,14 +150,14 @@ public:
      * @param wavPackFileName the name of the wavpack output file.
      * @return true, if the encoding process was successful, false otherwise.
      */
-    bool encodeWavPack(const QString& wavPackFileName);
+    virtual bool encodeWavPack(const QString& wavPackFileName) = 0;
     /**
      * Encode the audio file into a flac file. Artist, album, etc. tags are set.
      *
      * @param flacFileName the name of the flac output file.
      * @return true, if the encoding process was successful, false otherwise.
      */
-    bool encodeFlac(const QString& flacFileName);
+    virtual bool encodeFlac(const QString& flacFileName) = 0;
     /**
      * Remove the file attached to the object.
      */
@@ -172,11 +172,7 @@ signals:
      */
     void encodingProgress(int track, int progress);
 
-private slots:
-    void processEncodeOutput();
-    void processBackupOutput();
-
-private:
+protected:
     QString inputFileName;
     int inputAudioTrackNr;
     QString encodingArtist;
@@ -185,10 +181,109 @@ private:
     QString encodingTrackName;
     QString encodingTag;
     int encodingTagId;
-    QProcess* process;
     quint64 jobId;
 };
 
-Q_DECLARE_METATYPE(xAudioFile)
+class xAudioFileWav:public xAudioFile {
+    Q_OBJECT
+
+public:
+    /**
+     * Constructor. Create empty audio file object.
+     */
+    xAudioFileWav();
+    /**
+     * Constructor. Create an audio file object connected to a file.
+     * @param fileName the absolute path to the file as string.
+     * @param audioTrackNr the track of the audio CD, chapter in the movie file or file in archive.
+     * @param artist the artist name as string.
+     * @param album the album name as string.
+     * @param trackNr the track number as string
+     * @param trackName the track name as string.
+     * @param tag the additional tag as string.
+     * @param tagId the corresponding tag ID.
+     * @param id the job Id the audio file belongs to.
+     * @param parent pointer to the parent object.
+     */
+    xAudioFileWav(const QString& fileName, int audioTrackNr, const QString& artist, const QString& album,
+                  const QString& trackNr, const QString& trackName, const QString& tag, int tagId,
+                  quint64 id, QObject* parent=nullptr);
+    /**
+     * Copy constructor.
+     *
+     * @param copy a reference to the object to make a copy of.
+     */
+    xAudioFileWav(const xAudioFileWav& copy);
+    /**
+     * Encode the audio file into a wavpack file. No tags.
+     *
+     * @param wavPackFileName the name of the wavpack output file.
+     * @return true, if the encoding process was successful, false otherwise.
+     */
+    bool encodeWavPack(const QString& wavPackFileName) override;
+    /**
+     * Encode the audio file into a flac file. Artist, album, etc. tags are set.
+     *
+     * @param flacFileName the name of the flac output file.
+     * @return true, if the encoding process was successful, false otherwise.
+     */
+    bool encodeFlac(const QString& flacFileName) override;
+
+private:
+    QProcess* process;
+};
+
+class xAudioFileFlac:public xAudioFile {
+    Q_OBJECT
+
+public:
+    /**
+     * Constructor. Create empty audio file object.
+     */
+    xAudioFileFlac();
+    /**
+     * Constructor. Create an audio file object connected to a file.
+     *
+     * @param fileName the absolute path to the file as string.
+     * @param audioTrackNr the track of the audio CD, chapter in the movie file or file in archive.
+     * @param artist the artist name as string.
+     * @param album the album name as string.
+     * @param trackNr the track number as string
+     * @param trackName the track name as string.
+     * @param tag the additional tag as string.
+     * @param tagId the corresponding tag ID.
+     * @param id the job Id the audio file belongs to.
+     * @param parent pointer to the parent object.
+     */
+    xAudioFileFlac(const QString& fileName, int audioTrackNr, const QString& artist, const QString& album,
+                   const QString& trackNr, const QString& trackName, const QString& tag, int tagId,
+                   quint64 id, QObject* parent=nullptr);
+    /**
+     * Copy constructor.
+     *
+     * @param copy a reference to the object to make a copy of.
+     */
+    xAudioFileFlac(const xAudioFileFlac& copy);
+    /**
+     * Encode the audio file into a wavpack file. No tags.
+     *
+     * @param wavPackFileName the name of the wavpack output file.
+     * @return true, if the encoding process was successful, false otherwise.
+     */
+    bool encodeWavPack(const QString& wavPackFileName) override;
+    /**
+     * Encode the audio file into a flac file. Artist, album, etc. tags are set.
+     *
+     * @param flacFileName the name of the flac output file.
+     * @return true, if the encoding process was successful, false otherwise.
+     */
+    bool encodeFlac(const QString& flacFileName) override;
+
+private:
+    QProcess* process;
+};
+
+Q_DECLARE_METATYPE(xAudioFileWav)
+Q_DECLARE_METATYPE(xAudioFileFlac)
 
 #endif
