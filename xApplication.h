@@ -16,6 +16,7 @@
 
 #include "xMainAudioCDWidget.h"
 #include "xMainMovieFileWidget.h"
+#include "xMainArchiveFileWidget.h"
 #include "xMainEncodingWidget.h"
 #include <QSettings>
 #include <QStackedWidget>
@@ -40,6 +41,7 @@ private:
 
     xMainAudioCDWidget* audioCDWidget;
     xMainMovieFileWidget* movieFileWidget;
+    xMainArchiveFileWidget* archiveFileWidget;
     xMainEncodingWidget* encodingWidget;
     QStackedWidget* mainView;
 };

@@ -24,18 +24,22 @@ xApplication::xApplication(QWidget* parent, Qt::WindowFlags flags):
     mainView = new QStackedWidget(this);
     audioCDWidget = new xMainAudioCDWidget(mainView);
     movieFileWidget = new xMainMovieFileWidget(mainView);
+    archiveFileWidget = new xMainArchiveFileWidget(mainView);
     encodingWidget = new xMainEncodingWidget(mainView);
     mainView->addWidget(audioCDWidget);
     mainView->addWidget(movieFileWidget);
+    mainView->addWidget(archiveFileWidget);
     mainView->addWidget(encodingWidget);
     mainView->setCurrentWidget(audioCDWidget);
     // Register Type
-    qRegisterMetaType<xAudioFile>();
+    qRegisterMetaType<xAudioFileFlac>();
+    qRegisterMetaType<xAudioFileWav>();
     qRegisterMetaType<xAudioFile*>();
     qRegisterMetaType<QList<xAudioFile*>>();
     // Connections.
     connect(movieFileWidget, &xMainMovieFileWidget::audioFiles, encodingWidget, &xMainEncodingWidget::audioFiles);
     connect(audioCDWidget, &xMainAudioCDWidget::audioFiles, encodingWidget, &xMainEncodingWidget::audioFiles);
+    connect(archiveFileWidget, &xMainArchiveFileWidget::audioFiles, encodingWidget, &xMainEncodingWidget::audioFiles);
     // Set central widget
     setCentralWidget(mainView);
     // Create Menu
@@ -66,15 +70,18 @@ void xApplication::createMenus() {
     // Create actions for view menu.
     auto viewMenuSelectAudioCD = new QAction("Select &Audio CD View", this);
     auto viewMenuSelectMovieFile = new QAction("Select &Movie File View", this);
+    auto viewMenuSelectArchiveFile = new QAction("Select A&rchive File View", this);
     auto viewMenuSelectEncoding = new QAction("Select &Encoding View", this);
     // Connect actions from view menu.
     connect(viewMenuSelectAudioCD, &QAction::triggered, [=]() { mainView->setCurrentWidget(audioCDWidget); });
     connect(viewMenuSelectMovieFile, &QAction::triggered, [=]() { mainView->setCurrentWidget(movieFileWidget); });
+    connect(viewMenuSelectArchiveFile, &QAction::triggered, [=]() { mainView->setCurrentWidget(archiveFileWidget); });
     connect(viewMenuSelectEncoding, &QAction::triggered, [=]() { mainView->setCurrentWidget(encodingWidget); });
     // Create view menu.
     auto viewMenu = menuBar()->addMenu(tr("&View"));
     viewMenu->addAction(viewMenuSelectAudioCD);
     viewMenu->addAction(viewMenuSelectMovieFile);
+    viewMenu->addAction(viewMenuSelectArchiveFile);
     viewMenu->addAction(viewMenuSelectEncoding);
 }
 
