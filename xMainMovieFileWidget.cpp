@@ -29,6 +29,7 @@ xMainMovieFileWidget::xMainMovieFileWidget(QWidget *parent, Qt::WindowFlags flag
     auto mainLayout = new QGridLayout(this);
     // Audio CD -  artist and album input and some control.
     auto movieFileBox = new QGroupBox(tr("Movie File"), this);
+    movieFileBox->setFlat(xRipEncodeUseFlatGroupBox);
     movieFileArtistName = new QLineEdit(movieFileBox);
     movieFileAlbumName = new QLineEdit(movieFileBox);
     movieFileName = new QLineEdit(movieFileBox);
@@ -76,6 +77,7 @@ xMainMovieFileWidget::xMainMovieFileWidget(QWidget *parent, Qt::WindowFlags flag
     movieFileBox->setLayout(movieFileLayout);
     // Audio tracks box.
     auto movieAudioTracksBox = new QGroupBox(tr("Audio Tracks"), this);
+    movieAudioTracksBox->setFlat(xRipEncodeUseFlatGroupBox);
     movieAudioTracksSelectButton = new QPushButton(tr("Select All"), movieAudioTracksBox);
     movieAudioTracksRipButton = new QPushButton(tr("Rip Selected"), movieAudioTracksBox);
     movieAudioTracksRipButton->setEnabled(false);
@@ -94,6 +96,7 @@ xMainMovieFileWidget::xMainMovieFileWidget(QWidget *parent, Qt::WindowFlags flag
     movieAudioTracksBox->setLayout(movieAudioTracksLayout);
     // Console box.
     auto consoleBox = new QGroupBox(tr("Console"), this);
+    consoleBox->setFlat(xRipEncodeUseFlatGroupBox);
     consoleText = new QTextEdit(consoleBox);
     consoleText->setAcceptRichText(true);
     consoleText->setReadOnly(true);

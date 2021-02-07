@@ -29,6 +29,7 @@ xMainArchiveFileWidget::xMainArchiveFileWidget(QWidget *parent, Qt::WindowFlags 
     auto mainLayout = new QGridLayout(this);
     // Audio CD -  artist and album input and some control.
     auto archiveFileBox = new QGroupBox(tr("Archive File"), this);
+    archiveFileBox->setFlat(xRipEncodeUseFlatGroupBox);
     archiveFileArtistName = new QLineEdit(archiveFileBox);
     archiveFileAlbumName = new QLineEdit(archiveFileBox);
     archiveFileName = new QLineEdit(archiveFileBox);
@@ -64,6 +65,7 @@ xMainArchiveFileWidget::xMainArchiveFileWidget(QWidget *parent, Qt::WindowFlags 
     archiveFileBox->setLayout(archiveFileLayout);
     // Audio tracks box.
     auto archiveAudioTracksBox = new QGroupBox(tr("Audio Tracks"), this);
+    archiveAudioTracksBox->setFlat(xRipEncodeUseFlatGroupBox);
     archiveAudioTracksSelectButton = new QPushButton(tr("Select All"), archiveAudioTracksBox);
     archiveAudioTracksExtractButton = new QPushButton(tr("Extract Selected"), archiveAudioTracksBox);
     archiveAudioTracksExtractButton->setEnabled(false);
@@ -82,6 +84,7 @@ xMainArchiveFileWidget::xMainArchiveFileWidget(QWidget *parent, Qt::WindowFlags 
     archiveAudioTracksBox->setLayout(archiveAudioTracksLayout);
     // Console box.
     auto consoleBox = new QGroupBox(tr("Console"), this);
+    consoleBox->setFlat(xRipEncodeUseFlatGroupBox);
     consoleText = new QTextEdit(consoleBox);
     consoleText->setAcceptRichText(true);
     consoleText->setReadOnly(true);

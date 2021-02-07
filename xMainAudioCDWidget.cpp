@@ -28,6 +28,7 @@ xMainAudioCDWidget::xMainAudioCDWidget(QWidget *parent, Qt::WindowFlags flags):
     auto mainLayout = new QGridLayout(this);
     // Audio CD -  artist and album input and some control.
     auto audioCDBox = new QGroupBox(tr("Audio CD"), this);
+    audioCDBox->setFlat(xRipEncodeUseFlatGroupBox);
     audioCDDetectButton = new QPushButton(tr("Detect"), audioCDBox);
     audioCDEjectButton = new QPushButton(tr("Eject"), audioCDBox);
     audioCDArtistName = new QLineEdit(audioCDBox);
@@ -79,6 +80,7 @@ xMainAudioCDWidget::xMainAudioCDWidget(QWidget *parent, Qt::WindowFlags flags):
     audioCDBox->setLayout(audioCDLayout);
     // Audio tracks box.
     auto audioTracksBox = new QGroupBox(tr("Audio Tracks"), this);
+    audioTracksBox->setFlat(xRipEncodeUseFlatGroupBox);
     audioTracksSelectButton = new QPushButton(tr("Select All"), audioTracksBox);
     audioTracksRipButton = new QPushButton(tr("Rip Selected"), audioTracksBox);
     audioTracksRipButton->setEnabled(false);
@@ -97,6 +99,7 @@ xMainAudioCDWidget::xMainAudioCDWidget(QWidget *parent, Qt::WindowFlags flags):
     audioTracksBox->setLayout(audioTracksLayout);
     // Console box.
     auto consoleBox = new QGroupBox(tr("Console"), this);
+    consoleBox->setFlat(xRipEncodeUseFlatGroupBox);
     consoleText = new QTextEdit(consoleBox);
     consoleText->setAcceptRichText(true);
     consoleText->setReadOnly(true);

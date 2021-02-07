@@ -30,6 +30,7 @@ xMainEncodingWidget::xMainEncodingWidget(QWidget *parent, Qt::WindowFlags flags)
     auto mainLayout = new QGridLayout(this);
     // Create Format Box
     auto formatBox = new QGroupBox(tr("Format"), this);
+    formatBox->setFlat(xRipEncodeUseFlatGroupBox);
     auto formatLayout = new QGridLayout();
     auto formatEncodingFormatLabel = new QLabel(tr("Encoding Format"), formatBox);
     formatEncodingFormatInput = new QLineEdit(formatBox);
@@ -44,6 +45,7 @@ xMainEncodingWidget::xMainEncodingWidget(QWidget *parent, Qt::WindowFlags flags)
     formatBox->setLayout(formatLayout);
     // Create smart update box.
     auto updateBox = new QGroupBox(tr("Smart Update"), this);
+    updateBox->setFlat(xRipEncodeUseFlatGroupBox);
     auto updateLayout = new QGridLayout();
     updateArtistCheck = new QCheckBox(tr("Artist"), updateBox);
     updateArtistCheck->setChecked(true);
@@ -60,6 +62,7 @@ xMainEncodingWidget::xMainEncodingWidget(QWidget *parent, Qt::WindowFlags flags)
     updateBox->setLayout(updateLayout);
     // Create encode box.
     auto encodeBox = new QGroupBox(tr("Encode"), this);
+    encodeBox->setFlat(xRipEncodeUseFlatGroupBox);
     auto encodeLayout = new QGridLayout();
     encodeUseEncodingButton =  new QRadioButton(tr("Use Encoding Format"), encodeBox);
     encodeUseFileButton =  new QRadioButton(tr("Use File Format"), encodeBox);
@@ -79,6 +82,7 @@ xMainEncodingWidget::xMainEncodingWidget(QWidget *parent, Qt::WindowFlags flags)
     encodeBox->setLayout(encodeLayout);
     // Create encoded tracks box.
     auto encodingBox = new QGroupBox(tr("Encoding Tracks"), this);
+    encodingBox->setFlat(xRipEncodeUseFlatGroupBox);
     auto encodingLayout = new QGridLayout();
     encodingSelectAllButton = new QPushButton(tr("Select All"), encodingBox);
     encodingDeselectAllButton = new QPushButton(tr("Deselect All"), encodingBox);
