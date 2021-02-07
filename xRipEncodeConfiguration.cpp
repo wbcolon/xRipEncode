@@ -35,6 +35,7 @@ const char* xRipEncodeConfiguration_MKVMerge { "xRipEncode/MKVMerge" };
 const char* xRipEncodeConfiguration_MKVExtract { "xRipEncode/MKVExtract" };
 const char* xRipEncodeConfiguration_Flac { "xRipEncode/Flac" };
 const char* xRipEncodeConfiguration_WavPack { "xRipEncode/WavPack" };
+const char* xRipEncodeConfiguration_LLTag { "xRipEncode/LLTag" };
 const char* xRipEncodeConfiguration_Tags { "xRipEncode/Tags" };
 const char* xRipEncodeConfiguration_TagInfos { "xRipEncode/TagInfos" };
 // Default values.
@@ -52,6 +53,7 @@ const char* xRipEncodeConfiguration_MKVMerge_Default { "/usr/bin/mkvmerge" };
 const char* xRipEncodeConfiguration_MKVExtract_Default { "/usr/bin/mkvextract" };
 const char* xRipEncodeConfiguration_Flac_Default { "/usr/bin/flac" };
 const char* xRipEncodeConfiguration_WavPack_Default { "/usr/bin/wavpack" };
+const char* xRipEncodeConfiguration_LLTag_Default { "/usr/bin/lltag" };
 const char* xRipEncodeConfiguration_Tags_Default { "| [hd]| [%1.1]| [hd-%1.1]" };
 const char* xRipEncodeConfiguration_TagInfos_Default { "CD/Stereo|HD/Stereo|CD/MultiChannel|HD/MultiChannel" };
 
@@ -178,6 +180,13 @@ void xRipEncodeConfiguration::setWavPack(const QString& path) {
     }
 }
 
+void xRipEncodeConfiguration::setLLTag(const QString& path) {
+    if ((path != getLLTag()) && (std::filesystem::is_regular_file(path.toStdString()))) {
+        settings->setValue(xRipEncodeConfiguration_LLTag_Default, path);
+        settings->sync();
+    }
+}
+
 void xRipEncodeConfiguration::setTags(const QStringList& tags) {
     if (tags != getTags()) {
         settings->setValue(xRipEncodeConfiguration_Tags, tags.join('|'));
@@ -246,6 +255,10 @@ QString xRipEncodeConfiguration::getFlac() const {
 
 QString xRipEncodeConfiguration::getWavPack() const {
     return settings->value(xRipEncodeConfiguration_WavPack, xRipEncodeConfiguration_WavPack_Default).toString();
+}
+
+QString xRipEncodeConfiguration::getLLTag() const {
+    return settings->value(xRipEncodeConfiguration_LLTag, xRipEncodeConfiguration_LLTag_Default).toString();
 }
 
 QStringList xRipEncodeConfiguration::getTags() const {

@@ -23,6 +23,8 @@
 #include <filesystem>
 #include <list>
 
+const bool xRipEncodeUseFlatGroupBox = true;
+
 class xRipEncodeConfiguration:public QObject {
     Q_OBJECT
 
@@ -112,6 +114,12 @@ public:
      */
     void setWavPack(const QString& path);
     /**
+     * Set path to lltag.
+     *
+     * @param path the absolute path as string.
+     */
+    void setLLTag(const QString& path);
+    /**
      * Set the tags for HD and multi-channel.
      *
      * @param tags list of strings with tags.
@@ -195,6 +203,12 @@ public:
      * @return the absolute path as string.
      */
     [[nodiscard]] QString getWavPack() const;
+    /**
+     * Get the path to lltag.
+     *
+     * @return the absolute path as string.
+     */
+    [[nodiscard]] QString getLLTag() const;
     /**
      * Get the tags for HD and multi-channel.
      *

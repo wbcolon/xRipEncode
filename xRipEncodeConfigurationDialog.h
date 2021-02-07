@@ -99,6 +99,7 @@ private:
     QLineEdit* fileMKVExtractInput;
     QLineEdit* fileFlacInput;
     QLineEdit* fileWavPackInput;
+    QLineEdit* fileLLTagInput;
     QLineEdit* formatEncodingFormatInput;
     QLineEdit* formatFileNameFormatInput;
     QCheckBox* formatFileNameLowerCase;
