@@ -128,7 +128,11 @@ private:
      * @return a list of audio file objects containing the necessary information.
      */
     QList<xAudioFile*> getAudioFiles(const QString& tag, int tagId, quint64 jobId);
-
+    /**
+     * Determine the state of the rip button.
+     *
+     * @return true if we can enable the rip button, false otherwise.
+     */
     bool isRipButtonEnabled();
 
     QLineEdit* movieFileArtistName;
