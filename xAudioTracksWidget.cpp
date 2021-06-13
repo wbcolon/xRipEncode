@@ -91,7 +91,6 @@ void xAudioTrackItemWidget::setTrackSize(const QString& size) {
 
 void xAudioTrackItemWidget::setSelected(bool select) {
     trackSelect->setChecked(select);
-    emit isSelectedUpdate();
 }
 
 bool xAudioTrackItemWidget::isSelected() const {
@@ -219,6 +218,7 @@ void xAudioTracksWidget::selectAll() {
     for (auto& audioTrack : audioTracks) {
         audioTrack->setSelected(true);
     }
+    emit isSelectedUpdate();
 }
 
 void xAudioTracksWidget::clear() {
@@ -226,13 +226,11 @@ void xAudioTracksWidget::clear() {
 }
 
 bool xAudioTracksWidget::isSelected() {
-    for (const auto& audioTrack : audioTracks) {
-        if (audioTrack->isSelected()) {
-            return true;
-        }
-    }
-    return false;
+    return std::any_of(audioTracks.begin(), audioTracks.end(), [](xAudioTrackItemWidget* track) {
+        return track->isSelected();
+    });
 }
+
 QList<std::tuple<int,QString,QString>> xAudioTracksWidget::getSelected() {
     QList<std::tuple<int,QString,QString>> selectedTracks;
     for (const auto& audioTrack : audioTracks) {
@@ -250,6 +248,7 @@ void xAudioTracksWidget::ripProgress(int track, int progress) {
     // Track are numbered from 1..n but audioTracks index from 0..n-1.
     if ((track > 0) && (track <= audioTracks.count())) {
         audioTracks[track-1]->ripProgress(progress);
+        ensureWidgetVisible(audioTracks[track-1]);
     }
 }
 

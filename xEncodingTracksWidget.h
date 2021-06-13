@@ -33,7 +33,7 @@ class xEncodingTrackItemWidget:public QWidget {
     Q_OBJECT
 
 public:
-    explicit xEncodingTrackItemWidget(xAudioFile* file, QWidget* parent=nullptr);
+    explicit xEncodingTrackItemWidget(xAudioFile* file, xEncodingTracksWidget* parent=nullptr);
     /**
      * Destructor.
      */
@@ -176,6 +176,10 @@ signals:
      * @param item pointer to the encoding track item.
      */
     void updateTrackNr(xEncodingTrackItemWidget* item);
+    /**
+     * Signal triggered if this tracks selection changed.
+     */
+    void isSelectedUpdate();
 
 private slots:
     /**
@@ -275,6 +279,12 @@ public:
      */
     void setEncodedFormat(const QString& format);
     /**
+     * Return if any of the tracks are selected.
+     *
+     * @return true if one or more tracks are selected, false otherwise.
+     */
+    [[nodiscard]] bool isSelected();
+    /**
      * Retrieve the currently selected items.
      *
      * @return a list of pointer to the item widgets.
@@ -351,6 +361,12 @@ private slots:
      * @param item pointer to the encoding track item object updated.
      */
     void updateTrackNr(xEncodingTrackItemWidget* item);
+
+signals:
+    /**
+     * Emitted if encoding tracks selection changes.
+     */
+    void isSelectedUpdate();
 
 private:
     /**

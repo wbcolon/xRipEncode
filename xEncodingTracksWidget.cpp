@@ -20,7 +20,7 @@
 #include <QStackedWidget>
 #include <QDebug>
 
-xEncodingTrackItemWidget::xEncodingTrackItemWidget(xAudioFile* file, QWidget* parent):
+xEncodingTrackItemWidget::xEncodingTrackItemWidget(xAudioFile* file, xEncodingTracksWidget* parent):
         QWidget(parent),
         audioFile(file) {
     auto mainLayout = new QGridLayout(this);
@@ -88,6 +88,8 @@ xEncodingTrackItemWidget::xEncodingTrackItemWidget(xAudioFile* file, QWidget* pa
     connect(albumName, &QLineEdit::textChanged, this, &xEncodingTrackItemWidget::updatedAlbum);
     connect(tagName, &QLineEdit::textChanged, this, &xEncodingTrackItemWidget::updatedTag);
     connect(trackNr, &QLineEdit::textChanged, this, &xEncodingTrackItemWidget::updatedTrackNr);
+    // Connect signal to checkbox.
+    connect(trackSelect, &QCheckBox::clicked, this, &xEncodingTrackItemWidget::isSelectedUpdate);
 }
 
 void xEncodingTrackItemWidget::setArtist(const QString& artist) {
@@ -287,7 +289,7 @@ void xEncodingTracksWidget::viewInput() {
 }
 
 void xEncodingTracksWidget::setTracks(const QVector<xAudioFile*>& tracks) {
-    // Cleanup the layout. Recycle the track widgets.
+    // Cleanup the layout. Recycle the track widgets. New tracks are only appended.
     QVector<xEncodingTrackItemWidget*> currentTracks;
     for (auto& audioTrack : encodingTracks) {
         audioLayout->removeWidget(audioTrack);
@@ -322,6 +324,7 @@ void xEncodingTracksWidget::setTracks(const QVector<xAudioFile*>& tracks) {
         connect(trackItemWidget, &xEncodingTrackItemWidget::updateAlbum, this, &xEncodingTracksWidget::updateAlbum);
         connect(trackItemWidget, &xEncodingTrackItemWidget::updateTag, this, &xEncodingTracksWidget::updateTag);
         connect(trackItemWidget, &xEncodingTrackItemWidget::updateTrackNr, this, &xEncodingTracksWidget::updateTrackNr);
+        connect(trackItemWidget, &xEncodingTrackItemWidget::isSelectedUpdate, this, &xEncodingTracksWidget::isSelectedUpdate);
         // Update job ID.
         prevJobId = trackItemWidget->getJobId();
     }
@@ -372,6 +375,13 @@ void xEncodingTracksWidget::setEncodedFormat(const QString& format) {
     }
 }
 
+bool xEncodingTracksWidget::isSelected() {
+    return std::any_of(encodingTracks.begin(), encodingTracks.end(), [](xEncodingTrackItemWidget* track) {
+        return track->isSelected();
+    });
+}
+
+
 QList<xEncodingTrackItemWidget*> xEncodingTracksWidget::getSelected() {
     QList<xEncodingTrackItemWidget*> selected;
     for (auto i = 0; i < encodingTracks.count(); ++i) {
@@ -386,12 +396,14 @@ void xEncodingTracksWidget::selectAll() {
     for (auto& audioTrack : encodingTracks) {
         audioTrack->setSelected(true);
     }
+    emit isSelectedUpdate();
 }
 
 void xEncodingTracksWidget::deselectAll() {
     for (auto& audioTrack : encodingTracks) {
         audioTrack->setSelected(false);
     }
+    emit isSelectedUpdate();
 }
 
 void xEncodingTracksWidget::setUpdateArtist(bool enabled) {
@@ -419,17 +431,22 @@ void xEncodingTracksWidget::ripProgress(int track, int progress) {
     // Track are numbered from 1..n but encodingTracks index from 0..n-1.
     if ((track > 0) && (track <= encodingTracks.count())) {
         encodingTracks[track-1]->ripProgress(progress);
+        ensureWidgetVisible(encodingTracks[track-1]);
     }
 }
 
 void xEncodingTracksWidget::updateArtist(xEncodingTrackItemWidget* item) {
     if (updateArtistEnabled) {
-        auto artist = item->getArtist();
-        auto jobId = item->getJobId();
-        for (auto& tracks : encodingTracks) {
-            // Update only if job ID matches and if item is the one triggering the event.
-            if ((tracks->getJobId() == jobId) && (tracks != item)) {
-                tracks->setArtist(artist);
+        auto index = encodingTracks.indexOf(item);
+        if ((index >= 0) || (index < encodingTracks.count())) {
+            auto artist = item->getArtist();
+            auto jobId = item->getJobId();
+            for (auto i = index+1; i < encodingTracks.count(); ++i) {
+                // Update only if job ID matches and if item is the one triggering the event.
+                if (encodingTracks[i]->getJobId() != jobId) {
+                    break;
+                }
+                encodingTracks[i]->setArtist(artist);
             }
         }
     }
@@ -437,12 +454,16 @@ void xEncodingTracksWidget::updateArtist(xEncodingTrackItemWidget* item) {
 
 void xEncodingTracksWidget::updateAlbum(xEncodingTrackItemWidget* item) {
     if (updateAlbumEnabled) {
-        auto album = item->getAlbum();
-        auto jobId = item->getJobId();
-        for (auto& tracks : encodingTracks) {
-            // Update only if job ID matches and if item is the one triggering the event.
-            if ((tracks->getJobId() == jobId) && (tracks != item)) {
-                tracks->setAlbum(album);
+        auto index = encodingTracks.indexOf(item);
+        if ((index >= 0) || (index < encodingTracks.count())) {
+            auto album = item->getAlbum();
+            auto jobId = item->getJobId();
+            for (auto i = index+1; i < encodingTracks.count(); ++i) {
+                // Update only if job ID matches and if item is the one triggering the event.
+                if (encodingTracks[i]->getJobId() != jobId) {
+                    break;
+                }
+                encodingTracks[i]->setAlbum(album);
             }
         }
     }
@@ -450,12 +471,16 @@ void xEncodingTracksWidget::updateAlbum(xEncodingTrackItemWidget* item) {
 
 void xEncodingTracksWidget::updateTag(xEncodingTrackItemWidget* item) {
     if (updateTagEnabled) {
-        auto tag = item->getTag();
-        auto jobId = item->getJobId();
-        for (auto& tracks : encodingTracks) {
-            // Update only if job ID matches and if item is the one triggering the event.
-            if ((tracks->getJobId() == jobId) && (tracks != item)) {
-                tracks->setTag(tag);
+        auto index = encodingTracks.indexOf(item);
+        if ((index >= 0) || (index < encodingTracks.count())) {
+            auto tag = item->getTag();
+            auto jobId = item->getJobId();
+            for (auto i = index+1; i < encodingTracks.count(); ++i) {
+                // Update only if job ID matches and if item is the one triggering the event.
+                if (encodingTracks[i]->getJobId() != jobId) {
+                    break;
+                }
+                encodingTracks[i]->setTag(tag);
             }
         }
     }
@@ -468,11 +493,10 @@ void xEncodingTracksWidget::updateTrackNr(xEncodingTrackItemWidget* item) {
             auto jobId = item->getJobId();
             auto currentTrackNr = item->getTrackNr().toInt() + 1;
             for (auto i = index+1; i < encodingTracks.count(); ++i) {
-                if (encodingTracks[i]->getJobId() == jobId) {
-                    encodingTracks[i]->setTrackNr(QString("%1").arg(currentTrackNr++, 2, 10, QChar('0')));
-                } else {
+                if (encodingTracks[i]->getJobId() != jobId) {
                     break;
                 }
+                encodingTracks[i]->setTrackNr(QString("%1").arg(currentTrackNr++, 2, 10, QChar('0')));
             }
         }
     }
