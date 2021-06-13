@@ -57,7 +57,7 @@ void xReplaceWidget::addReplace(const QString& from, const QString& to) {
     auto item = new QListWidgetItem(this);
     auto replace = new xReplaceItemWidget(from, to, this);
     // Set a light grey as background color.
-    item->setBackgroundColor(QColor(0xe0, 0xe0, 0xe0));
+    item->setBackground(QBrush(QColor(0xe0, 0xe0, 0xe0)));
     setItemWidget(item, replace);
     item->setSizeHint(replace->sizeHint());
     addItem(item);
