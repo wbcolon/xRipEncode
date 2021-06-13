@@ -47,7 +47,8 @@ public slots:
     void audioFiles(const QList<xAudioFile*>& files);
 
 private slots:
-    void setAllEnabled(bool enabled);
+    void enableButtons(bool enabled);
+    void updateButtons();
     /**
      * Switch to the input view for all encoding track items.
      */

@@ -106,6 +106,7 @@ xMainEncodingWidget::xMainEncodingWidget(QWidget *parent, Qt::WindowFlags flags)
         connect(updateAlbumCheck, &QCheckBox::clicked, encodingTracksWidgets[i], &xEncodingTracksWidget::setUpdateAlbum);
         connect(updateTagCheck, &QCheckBox::clicked, encodingTracksWidgets[i], &xEncodingTracksWidget::setUpdateTag);
         connect(updateTrackNrCheck, &QCheckBox::clicked, encodingTracksWidgets[i], &xEncodingTracksWidget::setUpdateTrackNr);
+        connect(encodingTracksWidgets[i], &xEncodingTracksWidget::isSelectedUpdate, this, &xMainEncodingWidget::updateButtons);
         // Add tab.
         encodingTracksTab->addTab(encodingTracksWidgets[i], tagInfos[i]);
     }
@@ -138,6 +139,8 @@ xMainEncodingWidget::xMainEncodingWidget(QWidget *parent, Qt::WindowFlags flags)
     connect(encodingOutputAllButton, &QPushButton::pressed, this, &xMainEncodingWidget::outputAll);
     connect(encodingSelectAllButton, &QPushButton::pressed, this, &xMainEncodingWidget::selectAll);
     connect(encodingDeselectAllButton, &QPushButton::pressed, this, &xMainEncodingWidget::deselectAll);
+    // Enable buttons.
+    enableButtons(true);
 }
 
 xMainEncodingWidget::~xMainEncodingWidget() noexcept {
@@ -148,29 +151,53 @@ xMainEncodingWidget::~xMainEncodingWidget() noexcept {
     }
 }
 
-void xMainEncodingWidget::setAllEnabled(bool enabled) {
-    encodeUseEncodingButton->setEnabled(enabled);
-    encodeUseFileButton->setEnabled(enabled);
-    encodeEncodeButton->setEnabled(enabled);
-    encodeBackupButton->setEnabled(enabled);
-    encodeClearButton->setEnabled(enabled);
+void xMainEncodingWidget::enableButtons(bool enabled) {
     encodingEditAllButton->setEnabled(enabled);
     encodingOutputAllButton->setEnabled(enabled);
     encodingSelectAllButton->setEnabled(enabled);
     encodingDeselectAllButton->setEnabled(enabled);
+    if (enabled) {
+        updateButtons();
+    } else {
+        encodeEncodeButton->setEnabled(false);
+        encodeBackupButton->setEnabled(false);
+        encodeClearButton->setEnabled(false);
+    }
+}
+
+void xMainEncodingWidget::updateButtons() {
+    auto widgetEnabled = false;
+    auto selectedTracks = false;
+    auto haveTracks = false;
+    auto currentIndex = encodingTracksTab->currentIndex();
+    if ((currentIndex >= 0) && (currentIndex < encodingTracksTab->count())) {
+        haveTracks = !encodingAudioFiles[currentIndex].isEmpty();
+        widgetEnabled = encodingTracksWidgets[currentIndex]->isEnabled();
+        selectedTracks = encodingTracksWidgets[currentIndex]->isSelected();
+    }
+    auto buttonsEnabled = widgetEnabled && haveTracks && selectedTracks;
+    encodeEncodeButton->setEnabled(buttonsEnabled);
+    encodeBackupButton->setEnabled(buttonsEnabled);
+    encodeClearButton->setEnabled(haveTracks);
 }
 
 void xMainEncodingWidget::editAll() {
     auto currentIndex = encodingTracksTab->currentIndex();
     if ((currentIndex >= 0) && (currentIndex < encodingTracksWidgets.count())) {
+        // Re-enable if disabled after completed encoding.
+        encodingTracksWidgets[currentIndex]->setEnabled(true);
         encodingTracksWidgets[currentIndex]->viewInput();
+        updateButtons();
     }
 }
 
 void xMainEncodingWidget::outputAll() {
     auto currentIndex = encodingTracksTab->currentIndex();
     if ((currentIndex >= 0) && (currentIndex < encodingTracksWidgets.count())) {
+        // Re-enable if disabled after completed encoding.
+        encodingTracksWidgets[currentIndex]->setEnabled(true);
         encodingTracksWidgets[currentIndex]->viewOutput();
+        updateButtons();
     }
 }
 
@@ -197,7 +224,7 @@ void xMainEncodingWidget::encode() {
             encodingFiles.push_back(std::make_pair(selected->getAudioFile(), encodingDirectory+"/"+selected->getEncodedFileName()+".flac"));
         }
         if (!encodingFiles.isEmpty()) {
-            setAllEnabled(false);
+            enableButtons(false);
             encoding = new xAudioFileEncoding(encodingFiles, true);
             connect(encoding, &xAudioFileEncoding::encodingProgress,encodingTracksWidgets[currentIndex], &xEncodingTracksWidget::ripProgress);
             connect(encoding, &xAudioFileEncoding::finished, this, &xMainEncodingWidget::encodeFinished);
@@ -210,7 +237,8 @@ void xMainEncodingWidget::encodeFinished() {
     qDebug() << "xMainEncodingWidget::encodeFinished";
     delete encoding;
     encoding = nullptr;
-    setAllEnabled(true);
+    encodingTracksWidgets[encodingTracksTab->currentIndex()]->setEnabled(false);
+    enableButtons(true);
 }
 
 void xMainEncodingWidget::backup() {
@@ -222,7 +250,7 @@ void xMainEncodingWidget::backup() {
             encodingFiles.push_back(std::make_pair(selected->getAudioFile(), backupDirectory+"/"+selected->getEncodedFileName()+".wv"));
         }
         if (!encodingFiles.isEmpty()) {
-            setAllEnabled(false);
+            enableButtons(false);
             encoding = new xAudioFileEncoding(encodingFiles, false);
             connect(encoding, &xAudioFileEncoding::encodingProgress,encodingTracksWidgets[currentIndex], &xEncodingTracksWidget::ripProgress);
             connect(encoding, &xAudioFileEncoding::finished, this, &xMainEncodingWidget::backupFinished);
@@ -235,7 +263,7 @@ void xMainEncodingWidget::backupFinished() {
     qDebug() << "xMainEncodingWidget::backupFinished";
     delete encoding;
     encoding = nullptr;
-    setAllEnabled(true);
+    enableButtons(true);
 }
 
 
@@ -268,6 +296,7 @@ void xMainEncodingWidget::createEncodingTracksWidgets() {
             encodingTracksTab->setTabEnabled(i, false);
         }
     }
+    updateButtons();
 }
 
 void xMainEncodingWidget::audioFiles(const QList<xAudioFile*>& files) {
