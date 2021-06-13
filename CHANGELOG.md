@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.3.0 - 2021-
+
+- Add Archive File view.
+- Updates for smart update.
+- Improvements for audio and encoding track view.
+
 ## 0.2.2 - 2021-02-01
 
 - Fix disappearing changes in encoding view when adding new files.
