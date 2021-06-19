@@ -101,20 +101,40 @@ int xAudioFile::getAudioTrackNr() const {
     return inputAudioTrackNr;
 }
 
+void xAudioFile::setArtist(const QString& artist) {
+    encodingArtist = artist;
+}
+
 const QString& xAudioFile::getArtist() const {
     return encodingArtist;
+}
+
+void xAudioFile::setAlbum(const QString& album) {
+    encodingAlbum = album;
 }
 
 const QString& xAudioFile::getAlbum() const {
     return encodingAlbum;
 }
 
+void xAudioFile::setTrackNr(const QString& trackNr) {
+    encodingTrackNr = trackNr;
+}
+
 const QString& xAudioFile::getTrackNr() const {
     return encodingTrackNr;
 }
 
+void xAudioFile::setTrackName(const QString& trackName) {
+    encodingTrackName = trackName;
+}
+
 const QString& xAudioFile::getTrackName() const {
     return encodingTrackName;
+}
+
+void xAudioFile::setTag(const QString& tag) {
+    encodingTag = tag;
 }
 
 const QString& xAudioFile::getTag() const {

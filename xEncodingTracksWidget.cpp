@@ -97,6 +97,8 @@ void xEncodingTrackItemWidget::setArtist(const QString& artist) {
     disconnect(artistName, &QLineEdit::textChanged, this, &xEncodingTrackItemWidget::updatedArtist);
     artistName->setText(artist);
     connect(artistName, &QLineEdit::textChanged, this, &xEncodingTrackItemWidget::updatedArtist);
+    // Update audiofile
+    audioFile->setArtist(artist);
     updateEncodedFileName();
 }
 
@@ -105,6 +107,8 @@ void xEncodingTrackItemWidget::setAlbum(const QString& album) {
     disconnect(albumName, &QLineEdit::textChanged, this, &xEncodingTrackItemWidget::updatedAlbum);
     albumName->setText(album);
     connect(albumName, &QLineEdit::textChanged, this, &xEncodingTrackItemWidget::updatedAlbum);
+    // Update audiofile
+    audioFile->setAlbum(album);
     updateEncodedFileName();
 }
 
@@ -113,6 +117,8 @@ void xEncodingTrackItemWidget::setTag(const QString& tag) {
     disconnect(tagName, &QLineEdit::textChanged, this, &xEncodingTrackItemWidget::updatedTag);
     tagName->setText(tag);
     connect(tagName, &QLineEdit::textChanged, this, &xEncodingTrackItemWidget::updatedTag);
+    // Update audiofile
+    audioFile->setTag(tag);
     updateEncodedFileName();
 }
 
@@ -121,11 +127,15 @@ void xEncodingTrackItemWidget::setTrackNr(const QString& nr) {
     disconnect(trackNr, &QLineEdit::textChanged, this, &xEncodingTrackItemWidget::updatedTrackNr);
     trackNr->setText(nr);
     connect(trackNr, &QLineEdit::textChanged, this, &xEncodingTrackItemWidget::updatedTrackNr);
+    // Update audiofile
+    audioFile->setTrackNr(nr);
     updateEncodedFileName();
 }
 
 void xEncodingTrackItemWidget::setTrackName(const QString& name) {
     trackName->setText(name);
+    // Update audiofile
+    audioFile->setTrackName(name);
     updateEncodedFileName();
 }
 
@@ -215,12 +225,13 @@ void xEncodingTrackItemWidget::updatedTrackNr(const QString& text) {
 }
 
 void xEncodingTrackItemWidget::updateEncodedFileName() {
+    // Use audiofile to update file names.
     auto encodedName = encodedFormat;
-    encodedName.replace("(artist)", getArtist());
-    encodedName.replace("(album)", getAlbum());
-    encodedName.replace("(tracknr)", getTrackNr());
-    encodedName.replace("(trackname)", getTrackName());
-    encodedName.replace("(tag)", getTag());
+    encodedName.replace("(artist)", audioFile->getArtist());
+    encodedName.replace("(album)", audioFile->getAlbum());
+    encodedName.replace("(tracknr)", audioFile->getTrackNr());
+    encodedName.replace("(trackname)", audioFile->getTrackName());
+    encodedName.replace("(tag)", audioFile->getTag());
     encodedFileName->setText(encodedName);
 }
 

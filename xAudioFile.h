@@ -103,11 +103,23 @@ public:
      */
     [[nodiscard]] int getAudioTrackNr() const;
     /**
+     * Set the artist.
+     *
+     * @param artist the artist name as string.
+     */
+    void setArtist(const QString& artist);
+    /**
      * Get the artist used as tag.
      *
      * @return the artist name as string.
      */
     [[nodiscard]] const QString& getArtist() const;
+    /**
+     * Set the album.
+     *
+     * @param album the album name as string.
+     */
+    void setAlbum(const QString& album);
     /**
      * Get the album used as tag.
      *
@@ -115,17 +127,35 @@ public:
      */
     [[nodiscard]] const QString& getAlbum() const;
     /**
+     * Set the track number.
+     *
+     * @param trackNr the track number as string.
+     */
+    void setTrackNr(const QString& trackNr);
+    /**
      * Get the track number used as tag.
      *
      * @return the track number as string.
      */
     [[nodiscard]] const QString& getTrackNr() const;
     /**
+     * Set the track name.
+     *
+     * @param trackName the track name as string.
+     */
+    void setTrackName(const QString& trackName);
+    /**
      * Get the track name used as tag.
      *
      * @return the track name as string.
      */
     [[nodiscard]] const QString& getTrackName() const;
+    /**
+     * Set the tag.
+     *
+     * @param tag the tag as string.
+     */
+    void setTag(const QString& tag);
     /**
      * Get the hd/multi-channel tag used.
      *
