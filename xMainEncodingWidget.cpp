@@ -263,6 +263,7 @@ void xMainEncodingWidget::backupFinished() {
     qDebug() << "xMainEncodingWidget::backupFinished";
     delete encoding;
     encoding = nullptr;
+    encodingTracksWidgets[encodingTracksTab->currentIndex()]->setEnabled(false);
     enableButtons(true);
 }
 
