@@ -88,6 +88,7 @@ xEncodingTrackItemWidget::xEncodingTrackItemWidget(xAudioFile* file, xEncodingTr
     connect(albumName, &QLineEdit::textChanged, this, &xEncodingTrackItemWidget::updatedAlbum);
     connect(tagName, &QLineEdit::textChanged, this, &xEncodingTrackItemWidget::updatedTag);
     connect(trackNr, &QLineEdit::textChanged, this, &xEncodingTrackItemWidget::updatedTrackNr);
+    connect(trackName, &QLineEdit::textChanged, this, &xEncodingTrackItemWidget::updatedTrackName);
     // Connect signal to checkbox.
     connect(trackSelect, &QCheckBox::clicked, this, &xEncodingTrackItemWidget::isSelectedUpdate);
 }
@@ -133,7 +134,10 @@ void xEncodingTrackItemWidget::setTrackNr(const QString& nr) {
 }
 
 void xEncodingTrackItemWidget::setTrackName(const QString& name) {
+    // Do not trigger trigger an updateTrackNumber signal if we set it directly.
+    disconnect(trackNr, &QLineEdit::textChanged, this, &xEncodingTrackItemWidget::updatedTrackName);
     trackName->setText(name);
+    connect(trackNr, &QLineEdit::textChanged, this, &xEncodingTrackItemWidget::updatedTrackName);
     // Update audiofile
     audioFile->setTrackName(name);
     updateEncodedFileName();
@@ -222,6 +226,14 @@ void xEncodingTrackItemWidget::updatedTrackNr(const QString& text) {
         // Signal to tracks widget in order to allow for smart track number update.
         emit updateTrackNr(this);
     }
+}
+
+void xEncodingTrackItemWidget::updatedTrackName(const QString& text) {
+    auto pos = trackName->cursorPosition();
+    setTrackName(text);
+    trackName->setCursorPosition(pos);
+    // Signal to tracks widget in order to allow for smart tag update.
+    emit updateTrackName(this);
 }
 
 void xEncodingTrackItemWidget::updateEncodedFileName() {

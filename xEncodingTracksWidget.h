@@ -177,6 +177,12 @@ signals:
      */
     void updateTrackNr(xEncodingTrackItemWidget* item);
     /**
+     * Signal triggered if track name is updated.
+     *
+     * @param item pointer to the encoding track item.
+     */
+    void updateTrackName(xEncodingTrackItemWidget* item);
+    /**
      * Signal triggered if this tracks selection changed.
      */
     void isSelectedUpdate();
@@ -206,6 +212,12 @@ private slots:
      * @param text the new content of the tag input as string.
      */
     void updatedTrackNr(const QString& text);
+    /**
+     * Triggered upon changes in the track name input and emits signal updateTrackName.
+     *
+     * @param text the new content of the tag input as string.
+     */
+    void updatedTrackName(const QString& text);
     /**
      * Update the file name based on the format string and the widgets current input.
      */
