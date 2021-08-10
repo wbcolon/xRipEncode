@@ -135,9 +135,9 @@ void xEncodingTrackItemWidget::setTrackNr(const QString& nr) {
 
 void xEncodingTrackItemWidget::setTrackName(const QString& name) {
     // Do not trigger trigger an updateTrackNumber signal if we set it directly.
-    disconnect(trackNr, &QLineEdit::textChanged, this, &xEncodingTrackItemWidget::updatedTrackName);
+    disconnect(trackName, &QLineEdit::textChanged, this, &xEncodingTrackItemWidget::updatedTrackName);
     trackName->setText(name);
-    connect(trackNr, &QLineEdit::textChanged, this, &xEncodingTrackItemWidget::updatedTrackName);
+    connect(trackName, &QLineEdit::textChanged, this, &xEncodingTrackItemWidget::updatedTrackName);
     // Update audiofile
     audioFile->setTrackName(name);
     updateEncodedFileName();
