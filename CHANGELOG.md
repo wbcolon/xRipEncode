@@ -1,6 +1,12 @@
 # Changelog
 
-## 0.3.0 - 2021-
+## 0.3.1 - 2021-08-14
+
+- Fix various issues for encoding widget.
+- Fix smart update.
+- Minor UI updates.
+
+## 0.3.0 - 2021-06-13
 
 - Add Archive File view.
 - Updates for smart update.
