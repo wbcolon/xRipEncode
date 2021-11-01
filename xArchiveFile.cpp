@@ -199,9 +199,10 @@ xArchiveFileTags xArchiveFile::extractTagsFromQobuz() {
                 // Remove artist in track name plus the "-".
                 trackName[index].remove(0, qobuzTags.artist.size()+1);
             }
-            if (trackName[index].contains("-smr.flac")) {
-                // We have an HD album if track name contains "-smr".
+            if (trackName[index].contains("-smr.flac") || trackName[index].contains("-smrp.flac")) {
+                // We have an HD album if track name contains "-smr" or "-smrp".
                 qobuzTags.bitsPerSample = 24;
+                trackName[index].replace("-smrp.flac", ".flac");
                 trackName[index].replace("-smr.flac", ".flac");
             } else if (trackName[index].contains("-lls.flac")) {
                 qobuzTags.bitsPerSample = 16;
