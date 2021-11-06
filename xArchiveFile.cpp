@@ -214,6 +214,10 @@ xArchiveFileTags xArchiveFile::extractTagsFromQobuz() {
             }
         }
     }
+    // Sum up the numbers per disc.
+    for (auto index = 1; index < files+1; ++index) {
+        discMax[index] += discMax[index-1];
+    }
     // Compute final track numbers for index translation.
     for (auto index = 0; index < files; ++index) {
         archiveFileTrackNrs[index] = discMax[archiveFileTrackNrs[index]/1000] + (archiveFileTrackNrs[index]%1000);
