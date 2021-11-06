@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.2 - 2021-11-06
+
+- Fix a Qobuz lookup issues.
+
 ## 0.3.1 - 2021-08-14
 
 - Fix various issues for encoding widget.
