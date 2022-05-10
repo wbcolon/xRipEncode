@@ -168,7 +168,7 @@ xArchiveFileTags xArchiveFile::extractTags(const QString& scheme) {
 xArchiveFileTags xArchiveFile::extractTagsFromQobuz() {
     // Parse the file names in order to determine artist, album, track nr and track name.
     // Keep in mind that the names within the archive are not necessarily sorted.
-    QRegularExpression qobuzRegExp(R"((?<artist>.*?)-(?<album>.*)/(?<disc>\d\d)-(?<nr>\d\d)-(?<name>.*))");
+    QRegularExpression qobuzRegExp(R"((?<artist>.*?)-(?<album>.*)/(?<disc>\d\d)-(?<nr>\d+)-(?<name>.*))");
     QRegularExpressionMatch qobuzMatch;
     xArchiveFileTags qobuzTags;
     // Determine the number of (relevant) files in the archive.
