@@ -216,7 +216,7 @@ bool xAudioFileWav::encodeFlac(const QString& flacFileName) {
     process->setProcessChannelMode(QProcess::MergedChannels);
     process->start(xRipEncodeConfiguration::configuration()->getFlac(), { {"-8"}, {"-f"}, inputFileName,
                                                                           {"-o"}, flacFileName, { "--tag=ARTIST="+encodingArtist }, { "--tag=ALBUM="+encodingAlbum },
-                                                                          { "--tag=NUMBER="+encodingTrackNr }, { "--tag=TITLE="+encodingTrackName } });
+                                                                          { "--tag=TRACKNUMBER="+encodingTrackNr }, { "--tag=TITLE="+encodingTrackName } });
     qDebug() << "xAudioFileWav::encodeFlac: process arguments: " << process->arguments();
     process->waitForFinished(-1);
     auto exitCode = process->exitCode();
